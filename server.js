@@ -36,5 +36,15 @@ app.use('/api/scenarios', scenarioRoutes);
 const progressRoutes = require('./src/routes/progressRoutes');
 app.use('/api/progress', progressRoutes);
 
+const feedbackRoutes = require('./src/routes/feedbackRoutes');
+app.use('/api/feedback', feedbackRoutes);
+
+const adminRoutes = require('./src/routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
+
+const errorHandler = require('./src/middleware/errorHandler');
+app.use(errorHandler);
+
+
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

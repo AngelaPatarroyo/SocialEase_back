@@ -1,32 +1,27 @@
-const Progress = require('../models/Progress');
+const { getUserProgress, updateUserProgress } = require('../services/progressService');
 
-exports.getProgress = async (req, res) => {
+exports.getProgress = async (req, res, next) => {
   try {
-    const progress = await Progress.findOne({ userId: req.user.id }).populate('completedScenarios');
-    if (!progress) return res.json({ xp: 0, completedScenarios: [] });
+    const progress = await getUserProgress(req.user.id);
     res.json(progress);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-exports.updateProgress = async (req, res) => {
+exports.updateProgress = async (req, res, next) => {
   try {
     const { scenarioId, points } = req.body;
 
-    let progress = await Progress.findOne({ userId: req.user.id });
-    if (!progress) {
-      progress = new Progress({ userId: req.user.id, xp: 0, completedScenarios: [] });
+    if (!scenarioId || !points) {
+      const err = new Error('Scenario ID and points are required');
+      err.statusCode = 400;
+      return next(err);
     }
 
-    if (!progress.completedScenarios.some(id => id.toString() === scenarioId)) {
-      progress.completedScenarios.push(scenarioId);
-      progress.xp += points;
-      await progress.save();
-    }
-
+    const progress = await updateUserProgress(req.user.id, scenarioId, points);
     res.json(progress);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
