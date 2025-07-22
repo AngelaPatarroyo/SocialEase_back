@@ -1,4 +1,3 @@
-
 const User = require('../models/User');
 
 class UserRepository {
@@ -14,8 +13,8 @@ class UserRepository {
     return await User.findById(id);
   }
 
-  async update(id, updateData) {
-    return await User.findByIdAndUpdate(id, updateData, { new: true });
+  async update(id, data) {
+    return await User.findByIdAndUpdate(id, data, { new: true });
   }
 }
 

@@ -1,24 +1,26 @@
-const Progress = require('../models/Progress');
+const ProgressRepository = require('../repositories/ProgressRepository');
 
-exports.getUserProgress = async (userId) => {
-  const progress = await Progress.findOne({ userId }).populate('completedScenarios');
-  if (!progress) {
-    return { xp: 0, completedScenarios: [] };
-  }
-  return progress;
-};
+class ProgressService {
+  async updateProgress(userId, xpGained) {
+    let progress = await ProgressRepository.findByUserId(userId);
+    if (!progress) {
+      progress = await ProgressRepository.create({ userId, xp: xpGained });
+    } else {
+      progress.xp += xpGained;
 
-exports.updateUserProgress = async (userId, scenarioId, points) => {
-  let progress = await Progress.findOne({ userId });
-  if (!progress) {
-    progress = new Progress({ userId, xp: 0, completedScenarios: [] });
-  }
-
-  if (!progress.completedScenarios.some(id => id.toString() === scenarioId)) {
-    progress.completedScenarios.push(scenarioId);
-    progress.xp += points;
-    await progress.save();
+      // Level up for every 100 XP
+      if (progress.xp >= progress.level * 100) {
+        progress.level += 1;
+        progress.achievements.push(`Reached Level ${progress.level}`);
+      }
+      await progress.save();
+    }
+    return progress;
   }
 
-  return progress;
-};
+  async getProgress(userId) {
+    return await ProgressRepository.findByUserId(userId);
+  }
+}
+
+module.exports = new ProgressService();

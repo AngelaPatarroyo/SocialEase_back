@@ -1,28 +1,25 @@
-const { createUserFeedback, getFeedbackForScenario } = require('../services/feedbackService');
+const FeedbackService = require('../services/feedbackService');
 
-exports.createFeedback = async (req, res, next) => {
-  try {
-    const { scenarioId, comments, rating } = req.body;
-
-    if (!scenarioId || !comments) {
-      const err = new Error('Scenario ID and comments are required');
-      err.statusCode = 400;
-      return next(err);
+class FeedbackController {
+  async submit(req, res) {
+    try {
+      const { userId, scenarioId, reflection, rating } = req.body;
+      const feedback = await FeedbackService.submitFeedback({ userId, scenarioId, reflection, rating });
+      res.status(201).json(feedback);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
     }
-
-    const feedback = await createUserFeedback(req.user.id, { scenarioId, comments, rating });
-    res.status(201).json(feedback);
-  } catch (error) {
-    next(error);
   }
-};
 
-exports.getScenarioFeedback = async (req, res, next) => {
-  try {
-    const { scenarioId } = req.params;
-    const feedbackList = await getFeedbackForScenario(scenarioId);
-    res.json(feedbackList);
-  } catch (error) {
-    next(error);
+  async getUserFeedback(req, res) {
+    try {
+      const { userId } = req.params;
+      const feedbackList = await FeedbackService.getUserFeedback(userId);
+      res.status(200).json(feedbackList);
+    } catch (err) {
+      res.status(404).json({ error: 'Feedback not found' });
+    }
   }
-};
+}
+
+module.exports = new FeedbackController();

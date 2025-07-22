@@ -1,32 +1,11 @@
 const express = require('express');
-const { getScenarios, createScenario, updateScenario, deleteScenario } = require('../controllers/scenarioController');
-const { body } = require('express-validator');
-const validateRequest = require('../middleware/validateRequest');
-const verifyToken = require('../middleware/verifyToken');
-const isAdmin = require('../middleware/isAdmin');
-
 const router = express.Router();
+const ScenarioController = require('../controllers/scenarioController');
+const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware');
 
-router.get('/', verifyToken, getScenarios);
-
-router.post('/', [
-  verifyToken,
-  isAdmin,
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  body('difficulty').isIn(['easy', 'medium', 'hard']).withMessage('Invalid difficulty'),
-  body('points').isNumeric().withMessage('Points must be a number')
-], validateRequest, createScenario);
-
-router.put('/:id', [
-  verifyToken,
-  isAdmin,
-  body('title').optional().notEmpty(),
-  body('description').optional().notEmpty(),
-  body('difficulty').optional().isIn(['easy', 'medium', 'hard']),
-  body('points').optional().isNumeric()
-], validateRequest, updateScenario);
-
-router.delete('/:id', verifyToken, isAdmin, deleteScenario);
+router.post('/', authMiddleware, adminMiddleware, (req, res) => ScenarioController.create(req, res));
+router.get('/', authMiddleware, (req, res) => ScenarioController.getAll(req, res));
+router.put('/:id', authMiddleware, adminMiddleware, (req, res) => ScenarioController.update(req, res));
+router.delete('/:id', authMiddleware, adminMiddleware, (req, res) => ScenarioController.delete(req, res));
 
 module.exports = router;

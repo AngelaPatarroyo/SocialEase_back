@@ -1,11 +1,13 @@
-const Feedback = require('../models/Feedback');
+const FeedbackRepository = require('../repositories/FeedbackRepository');
 
-exports.createUserFeedback = async (userId, { scenarioId, comments, rating }) => {
-  const feedback = new Feedback({ userId, scenarioId, comments, rating });
-  await feedback.save();
-  return feedback;
-};
+class FeedbackService {
+  async submitFeedback({ userId, scenarioId, reflection, rating }) {
+    return await FeedbackRepository.create({ userId, scenarioId, reflection, rating });
+  }
 
-exports.getFeedbackForScenario = async (scenarioId) => {
-  return await Feedback.find({ scenarioId }).populate('userId', 'name email');
-};
+  async getUserFeedback(userId) {
+    return await FeedbackRepository.findByUserId(userId);
+  }
+}
+
+module.exports = new FeedbackService();

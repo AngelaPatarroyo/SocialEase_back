@@ -1,27 +1,25 @@
-const { getUserProgress, updateUserProgress } = require('../services/progressService');
+const ProgressService = require('../services/progressService');
 
-exports.getProgress = async (req, res, next) => {
-  try {
-    const progress = await getUserProgress(req.user.id);
-    res.json(progress);
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.updateProgress = async (req, res, next) => {
-  try {
-    const { scenarioId, points } = req.body;
-
-    if (!scenarioId || !points) {
-      const err = new Error('Scenario ID and points are required');
-      err.statusCode = 400;
-      return next(err);
+class ProgressController {
+  async updateProgress(req, res) {
+    try {
+      const { userId, xpGained } = req.body;
+      const progress = await ProgressService.updateProgress(userId, xpGained);
+      res.status(200).json(progress);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
     }
-
-    const progress = await updateUserProgress(req.user.id, scenarioId, points);
-    res.json(progress);
-  } catch (error) {
-    next(error);
   }
-};
+
+  async getProgress(req, res) {
+    try {
+      const { userId } = req.params;
+      const progress = await ProgressService.getProgress(userId);
+      res.status(200).json(progress);
+    } catch (err) {
+      res.status(404).json({ error: 'Progress not found' });
+    }
+  }
+}
+
+module.exports = new ProgressController();

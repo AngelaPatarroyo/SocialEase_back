@@ -1,50 +1,43 @@
-const {
-  getAllScenarios,
-  createScenario,
-  updateScenario,
-  deleteScenario
-} = require('../services/scenarioService');
+const ScenarioService = require('../services/scenarioService');
 
-exports.getScenarios = async (req, res, next) => {
-  try {
-    const scenarios = await getAllScenarios();
-    res.json(scenarios);
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.createScenario = async (req, res, next) => {
-  try {
-    const { title, description, difficulty, points } = req.body;
-
-    if (!title || !description) {
-      const err = new Error('Title and description are required');
-      err.statusCode = 400;
-      return next(err);
+class ScenarioController {
+  async create(req, res) {
+    try {
+      const scenario = await ScenarioService.createScenario(req.body);
+      res.status(201).json(scenario);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
     }
-
-    const scenario = await createScenario({ title, description, difficulty, points });
-    res.status(201).json(scenario);
-  } catch (error) {
-    next(error);
   }
-};
 
-exports.updateScenario = async (req, res, next) => {
-  try {
-    const updatedScenario = await updateScenario(req.params.id, req.body);
-    res.json(updatedScenario);
-  } catch (error) {
-    next(error);
+  async getAll(req, res) {
+    try {
+      const scenarios = await ScenarioService.getAllScenarios();
+      res.status(200).json(scenarios);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   }
-};
 
-exports.deleteScenario = async (req, res, next) => {
-  try {
-    await deleteScenario(req.params.id);
-    res.json({ message: 'Scenario deleted' });
-  } catch (error) {
-    next(error);
+  async update(req, res) {
+    try {
+      const { id } = req.params;
+      const updatedScenario = await ScenarioService.updateScenario(id, req.body);
+      res.status(200).json(updatedScenario);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   }
-};
+
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      await ScenarioService.deleteScenario(id);
+      res.status(200).json({ message: 'Scenario deleted successfully' });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+}
+
+module.exports = new ScenarioController();

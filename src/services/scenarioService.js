@@ -1,35 +1,21 @@
-const Scenario = require('../models/Scenario');
+const ScenarioRepository = require('../repositories/ScenarioRepository');
 
-// Get all scenarios
-exports.getAllScenarios = async () => {
-  return await Scenario.find();
-};
-
-// Create a new scenario
-exports.createScenario = async ({ title, description, difficulty, points }) => {
-  const scenario = new Scenario({ title, description, difficulty, points });
-  await scenario.save();
-  return scenario;
-};
-
-// Update scenario
-exports.updateScenario = async (id, data) => {
-  const updatedScenario = await Scenario.findByIdAndUpdate(id, data, { new: true });
-  if (!updatedScenario) {
-    const err = new Error('Scenario not found');
-    err.statusCode = 404;
-    throw err;
+class ScenarioService {
+  async createScenario(data) {
+    return await ScenarioRepository.create(data);
   }
-  return updatedScenario;
-};
 
-// Delete scenario
-exports.deleteScenario = async (id) => {
-  const deletedScenario = await Scenario.findByIdAndDelete(id);
-  if (!deletedScenario) {
-    const err = new Error('Scenario not found');
-    err.statusCode = 404;
-    throw err;
+  async getAllScenarios() {
+    return await ScenarioRepository.findAll();
   }
-  return deletedScenario;
-};
+
+  async updateScenario(id, data) {
+    return await ScenarioRepository.update(id, data);
+  }
+
+  async deleteScenario(id) {
+    return await ScenarioRepository.delete(id);
+  }
+}
+
+module.exports = new ScenarioService();

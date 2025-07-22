@@ -1,19 +1,9 @@
 const express = require('express');
-const { createFeedback, getScenarioFeedback } = require('../controllers/feedbackController');
-const { body } = require('express-validator');
-const validateRequest = require('../middleware/validateRequest');
-const verifyToken = require('../middleware/verifyToken');
-const isAdmin = require('../middleware/isAdmin');
-
 const router = express.Router();
+const FeedbackController = require('../controllers/feedbackController');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
-router.post('/', [
-  verifyToken,
-  body('scenarioId').notEmpty().withMessage('Scenario ID is required'),
-  body('comments').notEmpty().withMessage('Comments are required'),
-  body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5')
-], validateRequest, createFeedback);
-
-router.get('/:scenarioId', verifyToken, isAdmin, getScenarioFeedback);
+router.post('/submit', authMiddleware, (req, res) => FeedbackController.submit(req, res));
+router.get('/:userId', authMiddleware, (req, res) => FeedbackController.getUserFeedback(req, res));
 
 module.exports = router;
