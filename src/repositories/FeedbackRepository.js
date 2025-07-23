@@ -1,4 +1,5 @@
 const Feedback = require('../models/Feedback');
+const mongoose = require('mongoose');
 
 class FeedbackRepository {
   async create(data) {
@@ -6,7 +7,7 @@ class FeedbackRepository {
   }
 
   async findByUserId(userId) {
-    return await Feedback.find({ userId });
+    return await Feedback.find({ userId: new mongoose.Types.ObjectId(userId) });
   }
 }
 

@@ -1,41 +1,46 @@
-const ScenarioService = require('../services/scenarioService');
+const Scenario = require('../models/Scenario');
+const AppError = require('../utils/errors');
 
 class ScenarioController {
-  async create(req, res) {
+  async getAllScenarios(req, res, next) {
     try {
-      const scenario = await ScenarioService.createScenario(req.body);
-      res.status(201).json(scenario);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
-    }
-  }
-
-  async getAll(req, res) {
-    try {
-      const scenarios = await ScenarioService.getAllScenarios();
+      const scenarios = await Scenario.find();
       res.status(200).json(scenarios);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      next(new AppError('Failed to fetch scenarios', 500));
     }
   }
 
-  async update(req, res) {
+  async createScenario(req, res, next) {
     try {
-      const { id } = req.params;
-      const updatedScenario = await ScenarioService.updateScenario(id, req.body);
-      res.status(200).json(updatedScenario);
+      const { title, description, difficulty, points } = req.body;
+      const scenario = new Scenario({ title, description, difficulty, points });
+      await scenario.save();
+      res.status(201).json({ message: 'Scenario created successfully', scenario });
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      next(new AppError('Failed to create scenario', 400));
     }
   }
 
-  async delete(req, res) {
+  async updateScenario(req, res, next) {
     try {
-      const { id } = req.params;
-      await ScenarioService.deleteScenario(id);
+      const scenario = await Scenario.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      if (!scenario) return next(new AppError('Scenario not found', 404));
+
+      res.status(200).json({ message: 'Scenario updated successfully', scenario });
+    } catch (err) {
+      next(new AppError('Failed to update scenario', 400));
+    }
+  }
+
+  async deleteScenario(req, res, next) {
+    try {
+      const scenario = await Scenario.findByIdAndDelete(req.params.id);
+      if (!scenario) return next(new AppError('Scenario not found', 404));
+
       res.status(200).json({ message: 'Scenario deleted successfully' });
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      next(new AppError('Failed to delete scenario', 400));
     }
   }
 }

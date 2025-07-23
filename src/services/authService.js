@@ -26,4 +26,14 @@ class AuthService {
   }
 }
 
+const token = jwt.sign(
+  { id: user._id, role: user.role },
+  process.env.JWT_SECRET,
+  { expiresIn: '1h' } // Token valid for 1 hour
+);
+
+const bcrypt = require('bcrypt');
+const hashedPassword = await bcrypt.hash(password, 10);
+
+
 module.exports = new AuthService();

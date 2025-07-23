@@ -1,25 +1,30 @@
-const ProgressService = require('../services/progressService');
+const ProgressController = require('../services/progressService');
+const AppError = require('../utils/errors');
 
-class ProgressController {
-  async updateProgress(req, res) {
+class ProgressCtrl {
+  async updateProgress(req, res, next) {
     try {
-      const { userId, xpGained } = req.body;
-      const progress = await ProgressService.updateProgress(userId, xpGained);
+      const progress = await ProgressController.updateProgress(req.body);
+
+      if (!progress) return next(new AppError('Failed to update progress', 400));
+
       res.status(200).json(progress);
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      next(new AppError(err.message, 400));
     }
   }
 
-  async getProgress(req, res) {
+  async getProgress(req, res, next) {
     try {
-      const { userId } = req.params;
-      const progress = await ProgressService.getProgress(userId);
+      const progress = await ProgressController.getProgressByUserId(req.params.userId);
+
+      if (!progress) return next(new AppError('Progress not found', 404));
+
       res.status(200).json(progress);
     } catch (err) {
-      res.status(404).json({ error: 'Progress not found' });
+      next(new AppError(err.message, 500));
     }
   }
 }
 
-module.exports = new ProgressController();
+module.exports = new ProgressCtrl();
