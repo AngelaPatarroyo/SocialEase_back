@@ -19,30 +19,40 @@ const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 
-//  Security
+//  Security Middlewares
 app.use(helmet());
-app.use(cors({ origin: ['http://yourfrontend.com'], credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://yourfrontend.com', credentials: true }));
 
-//  Logging
+//  Global Rate Limiter (protect all routes)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per 15 minutes
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // RateLimit-* headers
+  legacyHeaders: false, // Disable X-RateLimit-* headers
+});
+app.use(globalLimiter);
+
+// Logging
 app.use(morgan('combined', {
   stream: { write: (message) => logger.info(message.trim()) }
 }));
 
-//  JSON parser
+//  JSON Parser
 app.use(express.json());
 
-//  Rate limit login route
+//  Rate limit only for login route (stricter)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 5, // max 5 login attempts in 15 minutes
   message: 'Too many login attempts, please try again later.'
 });
 app.use('/api/auth/login', loginLimiter);
 
-//  Swagger docs
+//  Swagger Docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-//  Mount all routes
+//  Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/scenarios', scenarioRoutes);
 app.use('/api/progress', progressRoutes);
@@ -50,17 +60,16 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
 
-//  Test route
+//  Test Route
 app.get('/test', (req, res) => res.send('API is working'));
-
-//  404 handler
+// 404 Handler
 app.use((req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
   error.status = 404;
   next(error);
 });
 
-//  Global error handler
+// Global Error Handler
 app.use(errorHandler);
 
 //  MongoDB Connection
@@ -71,6 +80,6 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('MongoDB Connected'))
 .catch(err => console.error(err));
 
-// ✅ Server
+// Start Server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

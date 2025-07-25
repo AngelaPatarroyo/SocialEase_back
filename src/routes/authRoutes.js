@@ -1,8 +1,8 @@
 const express = require('express');
-const { body } = require('express-validator');
 const router = express.Router();
 const AuthController = require('../controllers/authController');
 const validateRequest = require('../middleware/validateRequest');
+const { registerValidation, loginValidation } = require('../validators/authValidator');
 
 /**
  * @swagger
@@ -23,28 +23,45 @@ const validateRequest = require('../middleware/validateRequest');
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
  *             properties:
  *               name:
  *                 type: string
+ *                 example: John Doe
  *               email:
  *                 type: string
+ *                 example: john@example.com
  *               password:
  *                 type: string
+ *                 example: StrongPass#123
  *     responses:
  *       201:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
  *       400:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Email already exists"]
  */
-router.post('/register',
-  [
-    body('name').notEmpty().withMessage('Name is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-  ],
-  validateRequest,
-  (req, res) => AuthController.register(req, res)
-);
+router.post('/register', registerValidation, validateRequest, AuthController.register);
 
 /**
  * @swagger
@@ -58,24 +75,50 @@ router.post('/register',
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
  *             properties:
  *               email:
  *                 type: string
+ *                 example: john@example.com
  *               password:
  *                 type: string
+ *                 example: StrongPass#123
  *     responses:
  *       200:
  *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "64ad0fcb9d6b2e987d01f3b2"
+ *                     name:
+ *                       type: string
+ *                       example: John Doe
+ *                     email:
+ *                       type: string
+ *                       example: john@example.com
  *       401:
  *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid email or password
  */
-router.post('/login',
-  [
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('password').notEmpty().withMessage('Password is required')
-  ],
-  validateRequest,
-  (req, res) => AuthController.login(req, res)
-);
+router.post('/login', loginValidation, validateRequest, AuthController.login);
 
 module.exports = router;
