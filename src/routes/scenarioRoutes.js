@@ -1,35 +1,22 @@
 const express = require('express');
-const { body } = require('express-validator');
 const router = express.Router();
 const ScenarioController = require('../controllers/scenarioController');
-const { authMiddleware } = require('../middleware/authMiddleware');
-const isAdmin = require('../middleware/isAdmin');
+const { createScenarioValidation } = require('../validators/scenarioValidator');
 const validateRequest = require('../middleware/validateRequest');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
  * tags:
  *   name: Scenarios
- *   description: Scenario management
+ *   description: Manage scenarios
  */
-
-/**
- * @swagger
- * /api/scenarios:
- *   get:
- *     summary: Get all scenarios
- *     tags: [Scenarios]
- *     responses:
- *       200:
- *         description: List of scenarios
- */
-router.get('/', authMiddleware, (req, res) => ScenarioController.getAllScenarios(req, res));
 
 /**
  * @swagger
  * /api/scenarios:
  *   post:
- *     summary: Create a new scenario (Admin only)
+ *     summary: Create a new scenario
  *     tags: [Scenarios]
  *     security:
  *       - bearerAuth: []
@@ -42,37 +29,54 @@ router.get('/', authMiddleware, (req, res) => ScenarioController.getAllScenarios
  *             properties:
  *               title:
  *                 type: string
+ *                 example: Public Speaking Practice
  *               description:
  *                 type: string
+ *                 example: A scenario to practice speaking in front of an audience
  *               difficulty:
  *                 type: string
- *               points:
- *                 type: integer
+ *                 enum: [easy, medium, hard]
+ *                 example: medium
  *     responses:
  *       201:
  *         description: Scenario created successfully
- *       403:
- *         description: Admin only
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
  */
-router.post('/',
+router.post(
+  '/',
   authMiddleware,
-  isAdmin,
-  [
-    body('title').notEmpty().withMessage('Title is required'),
-    body('description').isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
-    body('difficulty').isIn(['easy', 'medium', 'hard']).withMessage('Difficulty must be easy, medium, or hard'),
-    body('points').isInt({ min: 1 }).withMessage('Points must be a positive integer')
-  ],
+  createScenarioValidation,
   validateRequest,
-  (req, res) => ScenarioController.createScenario(req, res)
+  ScenarioController.createScenario
 );
 
 /**
  * @swagger
- * /api/scenarios/{id}:
- *   put:
- *     summary: Update a scenario (Admin only)
+ * /api/scenarios:
+ *   get:
+ *     summary: Get all scenarios
  *     tags: [Scenarios]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of scenarios retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/', authMiddleware, ScenarioController.getScenarios);
+
+/**
+ * @swagger
+ * /api/scenarios/{id}:
+ *   get:
+ *     summary: Get a scenario by ID
+ *     tags: [Scenarios]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
@@ -81,24 +85,76 @@ router.post('/',
  *           type: string
  *     responses:
  *       200:
- *         description: Scenario updated successfully
+ *         description: Scenario details
+ *       404:
+ *         description: Scenario not found
  */
-router.put('/:id', authMiddleware, isAdmin, (req, res) => ScenarioController.updateScenario(req, res));
+router.get('/:id', authMiddleware, ScenarioController.getScenarioById);
+
+/**
+ * @swagger
+ * /api/scenarios/{id}:
+ *   put:
+ *     summary: Update an existing scenario
+ *     tags: [Scenarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: Updated Scenario Title
+ *               description:
+ *                 type: string
+ *                 example: Updated description for scenario
+ *               difficulty:
+ *                 type: string
+ *                 enum: [easy, medium, hard]
+ *     responses:
+ *       200:
+ *         description: Scenario updated successfully
+ *       404:
+ *         description: Scenario not found
+ */
+router.put(
+  '/:id',
+  authMiddleware,
+  createScenarioValidation,
+  validateRequest,
+  ScenarioController.updateScenario
+);
 
 /**
  * @swagger
  * /api/scenarios/{id}:
  *   delete:
- *     summary: Delete a scenario (Admin only)
+ *     summary: Delete a scenario
  *     tags: [Scenarios]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path
  *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Scenario deleted successfully
+ *       404:
+ *         description: Scenario not found
  */
-router.delete('/:id', authMiddleware, isAdmin, (req, res) => ScenarioController.deleteScenario(req, res));
+router.delete('/:id', authMiddleware, ScenarioController.deleteScenario);
 
 module.exports = router;

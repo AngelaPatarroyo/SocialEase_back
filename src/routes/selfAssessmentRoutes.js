@@ -1,22 +1,22 @@
 const express = require('express');
-const { body } = require('express-validator');
 const router = express.Router();
 const SelfAssessmentController = require('../controllers/selfAssessmentController');
-const { authMiddleware } = require('../middleware/authMiddleware');
+const { selfAssessmentValidation } = require('../validators/selfAssessmentValidator');
 const validateRequest = require('../middleware/validateRequest');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
  * tags:
  *   name: SelfAssessment
- *   description: User self-assessment endpoints
+ *   description: Complete and retrieve self-assessments
  */
 
 /**
  * @swagger
  * /api/self-assessment:
  *   post:
- *     summary: Complete self-assessment after registration
+ *     summary: Complete self-assessment
  *     tags: [SelfAssessment]
  *     security:
  *       - bearerAuth: []
@@ -51,23 +51,8 @@ const validateRequest = require('../middleware/validateRequest');
  *     responses:
  *       201:
  *         description: Self-assessment completed
- *       400:
- *         description: Validation error
  */
-router.post('/',
-  authMiddleware,
-  [
-    body('socialLevel').isIn(['low', 'medium', 'high']).withMessage('Invalid social level'),
-    body('primaryGoal').isString().optional(),
-    body('comfortZones').isArray().optional(),
-    body('preferredScenarios').isArray().optional(),
-    body('anxietyTriggers').isArray().optional(),
-    body('communicationConfidence').isInt({ min: 1, max: 10 }).optional(),
-    body('socialFrequency').isString().optional()
-  ],
-  validateRequest,
-  (req, res, next) => SelfAssessmentController.create(req, res, next)
-);
+router.post('/', authMiddleware, selfAssessmentValidation, validateRequest, SelfAssessmentController.create);
 
 /**
  * @swagger
@@ -83,11 +68,8 @@ router.post('/',
  *         required: true
  *     responses:
  *       200:
- *         description: User self-assessment
+ *         description: Self-assessment data
  */
-router.get('/:userId',
-  authMiddleware,
-  (req, res, next) => SelfAssessmentController.getUserAssessment(req, res, next)
-);
+router.get('/:userId', authMiddleware, SelfAssessmentController.getUserAssessment);
 
 module.exports = router;

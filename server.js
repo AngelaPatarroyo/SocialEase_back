@@ -7,7 +7,6 @@ const rateLimit = require('express-rate-limit');
 const logger = require('./src/utils/logger');
 require('dotenv').config();
 
-// Routes
 const authRoutes = require('./src/routes/authRoutes');
 const scenarioRoutes = require('./src/routes/scenarioRoutes');
 const progressRoutes = require('./src/routes/progressRoutes');
@@ -19,40 +18,36 @@ const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 
-//  Security Middlewares
+// Security
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://yourfrontend.com', credentials: true }));
 
-//  Global Rate Limiter (protect all routes)
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per 15 minutes
+// Global Rate Limiter
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true, // RateLimit-* headers
-  legacyHeaders: false, // Disable X-RateLimit-* headers
-});
-app.use(globalLimiter);
-
-// Logging
-app.use(morgan('combined', {
-  stream: { write: (message) => logger.info(message.trim()) }
+  standardHeaders: true,
+  legacyHeaders: false,
 }));
 
-//  JSON Parser
+// Logging
+app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
+
+// JSON Parser
 app.use(express.json());
 
-//  Rate limit only for login route (stricter)
-const loginLimiter = rateLimit({
+// Login Rate Limiter
+app.use('/api/auth/login', rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // max 5 login attempts in 15 minutes
+  max: 5,
   message: 'Too many login attempts, please try again later.'
-});
-app.use('/api/auth/login', loginLimiter);
+}));
 
-//  Swagger Docs
+// Swagger Docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-//  Mount Routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/scenarios', scenarioRoutes);
 app.use('/api/progress', progressRoutes);
@@ -60,25 +55,21 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
 
-//  Test Route
+// Test Route
 app.get('/test', (req, res) => res.send('API is working'));
+
 // 404 Handler
 app.use((req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  error.status = 404;
-  next(error);
+  res.status(404).json({ status: 'error', message: `Not Found - ${req.originalUrl}` });
 });
 
-// Global Error Handler
+// Error Handler
 app.use(errorHandler);
 
-//  MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB Connected'))
-.catch(err => console.error(err));
+// DB Connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB Connected'))
+  .catch((err) => console.error(err));
 
 // Start Server
 const PORT = process.env.PORT || 4000;

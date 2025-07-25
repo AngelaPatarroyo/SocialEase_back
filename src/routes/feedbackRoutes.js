@@ -1,7 +1,7 @@
 const express = require('express');
-const { body, param } = require('express-validator');
 const router = express.Router();
 const FeedbackController = require('../controllers/feedbackController');
+const { createFeedbackValidation } = require('../validators/feedbackValidator');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 
@@ -9,12 +9,12 @@ const validateRequest = require('../middleware/validateRequest');
  * @swagger
  * tags:
  *   name: Feedback
- *   description: Feedback operations
+ *   description: User feedback endpoints
  */
 
 /**
  * @swagger
- * /api/feedback/submit:
+ * /api/feedback:
  *   post:
  *     summary: Submit feedback for a scenario
  *     tags: [Feedback]
@@ -35,29 +35,18 @@ const validateRequest = require('../middleware/validateRequest');
  *                 type: string
  *               rating:
  *                 type: integer
+ *                 example: 5
  *     responses:
  *       201:
  *         description: Feedback submitted successfully
- *       400:
- *         description: Validation error
  */
-router.post('/submit',
-  authMiddleware,
-  [
-    body('userId').isMongoId().withMessage('Valid userId is required'),
-    body('scenarioId').isMongoId().withMessage('Valid scenarioId is required'),
-    body('reflection').isString().isLength({ min: 10 }).withMessage('Reflection must be at least 10 characters long'),
-    body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5')
-  ],
-  validateRequest,
-  (req, res) => FeedbackController.submit(req, res)
-);
+router.post('/', authMiddleware, createFeedbackValidation, validateRequest, FeedbackController.submit);
 
 /**
  * @swagger
  * /api/feedback/{userId}:
  *   get:
- *     summary: Get all feedback by user
+ *     summary: Get feedback submitted by a user
  *     tags: [Feedback]
  *     security:
  *       - bearerAuth: []
@@ -69,15 +58,8 @@ router.post('/submit',
  *           type: string
  *     responses:
  *       200:
- *         description: List of feedback
+ *         description: List of feedback by user
  */
-router.get('/:userId',
-  authMiddleware,
-  [
-    param('userId').isMongoId().withMessage('Valid userId is required')
-  ],
-  validateRequest,
-  (req, res) => FeedbackController.getUserFeedback(req, res)
-);
+router.get('/:userId', authMiddleware, FeedbackController.getUserFeedback);
 
 module.exports = router;
