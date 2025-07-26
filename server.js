@@ -20,33 +20,46 @@ const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 
-//  Security
+//  Security Middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://yourfrontend.com', credentials: true }));
+
+//  CORS Setup (Allow localhost:3000 and your production domain)
+const allowedOrigins = ['http://localhost:3000', 'https://yourfrontend.com'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
+  credentials: true,
+}));
 
 //  Global Rate Limiter
 app.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
 }));
 
-//  Logging
+//  Logging with Morgan and Winston
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 
-//  JSON Parser
+//  Body Parser
 app.use(express.json());
 
 //  Login Rate Limiter
 app.use('/api/auth/login', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  message: 'Too many login attempts, please try again later.'
+  message: 'Too many login attempts, please try again later.',
 }));
 
-//  Swagger Docs
+// Swagger Docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //  Routes
@@ -58,7 +71,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
 
-//  Test Route
+// Test Route
 app.get('/test', (req, res) => res.send('API is working'));
 
 //  404 Handler
@@ -74,6 +87,6 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB Connected'))
   .catch((err) => console.error(' MongoDB Connection Error:', err));
 
-// Start Server
+//  Start Server
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
