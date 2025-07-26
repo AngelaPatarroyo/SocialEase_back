@@ -10,6 +10,12 @@ class FeedbackRepository {
     return await Feedback.find({ userId: new mongoose.Types.ObjectId(userId) });
   }
 
+  async findRecentByUser(userId, limit = 3) {
+    return await Feedback.find({ userId: new mongoose.Types.ObjectId(userId) })
+      .sort({ createdAt: -1 })
+      .limit(limit);
+  }
+
   async count() {
     return await Feedback.countDocuments();
   }

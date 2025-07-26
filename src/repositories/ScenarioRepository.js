@@ -24,6 +24,15 @@ class ScenarioRepository {
   async count() {
     return await Scenario.countDocuments();
   }
+
+  async findByDifficulty(difficulty) {
+    return await Scenario.find({ difficulty: difficulty });
+  }
+
+  //  Fetch all VR-supported scenarios
+  async findVRScenarios() {
+    return await Scenario.find({ vrSupported: true });
+  }
 }
 
 module.exports = new ScenarioRepository();

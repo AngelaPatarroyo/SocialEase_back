@@ -1,5 +1,5 @@
 const express = require('express');
-const UserController = require('../controllers/userController'); // Import instance
+const UserController = require('../controllers/userController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 const { body } = require('express-validator');
@@ -24,6 +24,25 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Profile fetched successfully
+ *
+ *   put:
+ *     summary: Update logged-in user's profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ */
+
+/**
+ * @swagger
+ * /user/dashboard:
+ *   get:
+ *     summary: Get user's personal dashboard (XP, streak, badges, progress)
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard fetched successfully
  *         content:
  *           application/json:
  *             schema:
@@ -32,71 +51,48 @@ const router = express.Router();
  *                 success:
  *                   type: boolean
  *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Your personal progress dashboard
  *                 data:
  *                   type: object
  *                   properties:
- *                     id:
- *                       type: string
- *                       example: 64ab1d2b9d6b2e987d01f3a5
- *                     name:
- *                       type: string
- *                       example: John Doe
- *                     email:
- *                       type: string
- *                       example: john@example.com
- *                     avatar:
- *                       type: string
- *                       example: default-avatar.png
- *                     theme:
- *                       type: string
- *                       example: light
- *                     xp:
- *                       type: number
- *                       example: 120
- *                     level:
- *                       type: number
- *                       example: 2
- *                     streak:
- *                       type: number
- *                       example: 3
- *                     badges:
+ *                     stats:
+ *                       type: object
+ *                       properties:
+ *                         xp:
+ *                           type: number
+ *                           example: 450
+ *                         level:
+ *                           type: number
+ *                           example: 3
+ *                         streak:
+ *                           type: number
+ *                           example: 5
+ *                         badges:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                           example: ["Feedback Champ", "Consistency Hero"]
+ *                     progress:
+ *                       type: object
+ *                       properties:
+ *                         completedScenariosCount:
+ *                           type: number
+ *                           example: 7
+ *                         recentScenarios:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                           example: ["scenarioId1", "scenarioId2"]
+ *                     messages:
  *                       type: array
  *                       items:
  *                         type: string
- *                       example: ["Getting Started", "Consistent Learner"]
- *       401:
- *         description: Unauthorized - No token provided or invalid token
- *
- *   put:
- *     summary: Update logged-in user's profile
- *     tags: [Profile]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: Jane Doe
- *               avatar:
- *                 type: string
- *                 example: custom-avatar.png
- *               theme:
- *                 type: string
- *                 enum: [light, dark]
- *                 example: dark
- *     responses:
- *       200:
- *         description: Profile updated successfully
- *       400:
- *         description: Validation error
+ *                       example: ["You're on a 5-day streak! Great consistency."]
  */
 
-//  Validation rules for updating profile
+// Validation rules for updating profile
 const updateProfileValidation = [
   body('name')
     .optional()
@@ -107,15 +103,18 @@ const updateProfileValidation = [
   body('avatar')
     .optional()
     .isString()
-    .withMessage('Avatar must be a string (URL or identifier)'),
+    .withMessage('Avatar must be a string'),
   body('theme')
     .optional()
     .isIn(['light', 'dark'])
     .withMessage('Theme must be either light or dark')
 ];
 
-//  Routes
+// Routes
 router.get('/profile', authMiddleware, UserController.getProfile);
 router.put('/profile', authMiddleware, updateProfileValidation, validateRequest, UserController.updateProfile);
+
+//  New Dashboard Route
+router.get('/dashboard', authMiddleware, UserController.getDashboard);
 
 module.exports = router;

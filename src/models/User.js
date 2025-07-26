@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
 
+const goalSchema = new mongoose.Schema({
+  title: { type: String, required: true }, // Goal description
+  target: { type: Number, required: true }, // Target count (e.g., 5 scenarios)
+  progress: { type: Number, default: 0 }, // Current progress
+  deadline: { type: Date }, // Optional deadline
+  reminder: { type: Date }, // Reminder time
+  completed: { type: Boolean, default: false }
+});
+
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -15,7 +24,10 @@ const userSchema = new mongoose.Schema({
   level: { type: Number, default: 1 },
   badges: [{ type: String }],
   streak: { type: Number, default: 0 },
-  lastCompletedDate: { type: Date }
+  lastCompletedDate: { type: Date },
+
+  // NEW: Goals
+  goals: [goalSchema]
 
 }, { timestamps: true });
 
