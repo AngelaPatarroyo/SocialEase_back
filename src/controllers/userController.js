@@ -11,20 +11,22 @@ class UserController {
       id: user._id,
       name: user.name,
       email: user.email,
-      avatar: user.avatar,
-      theme: user.theme,
-      xp: user.xp,
-      level: user.level,
-      streak: user.streak,
-      badges: user.badges
+      avatar: user.avatar || null,
+      theme: user.theme || 'light',
+      xp: user.xp || 0,
+      level: user.level || 1,
+      streak: user.streak || 0,
+      badges: user.badges || []
     };
   }
 
   /**
-   * Get user profile
+   * Get logged-in user's profile
    */
   async getProfile(req, res, next) {
     try {
+      if (!req.user?.id) throw new AppError('Unauthorized', 401);
+
       const user = await UserService.getProfile(req.user.id);
       if (!user) throw new AppError('User not found', 404);
 
@@ -42,6 +44,8 @@ class UserController {
    */
   async updateProfile(req, res, next) {
     try {
+      if (!req.user?.id) throw new AppError('Unauthorized', 401);
+
       const allowedUpdates = ['name', 'avatar', 'theme'];
       const updates = {};
 
@@ -55,12 +59,12 @@ class UserController {
         throw new AppError('No valid fields provided for update', 400);
       }
 
-      const user = await UserService.updateProfile(req.user.id, updates);
+      const updatedUser = await UserService.updateProfile(req.user.id, updates);
 
       res.status(200).json({
         success: true,
         message: 'Profile updated successfully',
-        data: this.formatUserResponse(user)
+        data: this.formatUserResponse(updatedUser)
       });
     } catch (error) {
       next(error);
@@ -68,10 +72,12 @@ class UserController {
   }
 
   /**
-   * Get anxiety-safe personal dashboard
+   * Get personal dashboard (XP, badges, progress)
    */
   async getDashboard(req, res, next) {
     try {
+      if (!req.user?.id) throw new AppError('Unauthorized', 401);
+
       const dashboardData = await DashboardService.getDashboard(req.user.id);
       res.status(200).json({
         success: true,

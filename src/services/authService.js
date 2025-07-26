@@ -1,39 +1,71 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const UserRepository = require('../repositories/UserRepository');
+const AppError = require('../utils/errors'); // Use your error utility for consistency
 
 class AuthService {
+  /**
+   * Register a new user
+   */
   async register({ name, email, password }) {
     // Check if user already exists
     const existingUser = await UserRepository.findByEmail(email);
-    if (existingUser) throw new Error('Email already in use');
+    if (existingUser) throw new AppError('Email already in use', 400);
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const user = await UserRepository.create({ name, email, password: hashedPassword });
+    const user = await UserRepository.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'user', // Default role
+      xp: 0,
+      level: 1,
+      streak: 0,
+      badges: []
+    });
 
-    return user;
+    // Return safe user data
+    return {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
   }
 
+  /**
+   * Login and return token + user data
+   */
   async login({ email, password }) {
     // Find user by email
     const user = await UserRepository.findByEmail(email);
-    if (!user) throw new Error('Invalid credentials');
+    if (!user) throw new AppError('Invalid credentials', 401);
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error('Invalid credentials');
+    if (!isMatch) throw new AppError('Invalid credentials', 401);
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id.toString(), role: user.role }, // ✅ Ensure `id` is in payload
       process.env.JWT_SECRET,
       { expiresIn: '1d' } // Token valid for 1 day
     );
 
-    return { token, user };
+    // Return token + safe user data
+    return {
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    };
   }
 }
 
