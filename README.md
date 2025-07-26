@@ -16,22 +16,22 @@ A Node.js + Express backend for **SocialEase**, an application designed to help 
 
 ## ✅ **Project Structure**
 
-socialease-backend/
-│
-├── src/
-│   ├── controllers/       # Handles API requests
-│   ├── services/          # Business logic
-│   ├── repositories/      # Database operations
-│   ├── models/            # Mongoose schemas
-│   ├── routes/            # Express routes (Swagger docs included)
-│   ├── middleware/        # Auth, Validation, Error Handling
-│   ├── config/            # Swagger & XP config
-│   ├── utils/             # Logger and helpers
-│
-├── .env.example           # Example environment file
-├── .gitignore             # Ignores node_modules, .env, logs
-├── server.js              # App entry point
-└── README.md              # Documentation
+| **Folder/File**     | **Description**                               |
+| ------------------- | --------------------------------------------- |
+| `src/`              | Main source folder                            |
+| ├── `controllers/`  | Handles API requests and responses            |
+| ├── `services/`     | Business logic (e.g., gamification, progress) |
+| ├── `repositories/` | Database operations (MongoDB)                 |
+| ├── `models/`       | Mongoose schemas for collections              |
+| ├── `routes/`       | Express routes (Swagger docs included)        |
+| ├── `middleware/`   | Auth, validation, and error handling          |
+| ├── `config/`       | Swagger setup and XP configuration            |
+| ├── `utils/`        | Logger and helper functions                   |
+| `.env.example`      | Example environment variables file            |
+| `.gitignore`        | Ignore files like `.env`, `node_modules`      |
+| `server.js`         | Application entry point                       |
+| `README.md`         | Project documentation                         |
+
 
 ✅ Setup Instructions
 1. Clone the Repository
