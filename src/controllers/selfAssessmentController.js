@@ -1,28 +1,21 @@
 const SelfAssessmentService = require('../services/selfAssessmentService');
-const { updateUserGamification } = require('../services/gamificationService');
-const xpRewards = require('../config/xpRewards'); //  Import XP rewards config
 const AppError = require('../utils/errors');
 
 class SelfAssessmentController {
   /**
-   * @desc Create self-assessment and award XP
+   * @desc Create self-assessment (XP awarded inside service for consistency)
    * @route POST /api/self-assessment
    * @access Private
    */
   async create(req, res, next) {
     try {
       const userId = req.user.id;
-      const data = req.body;
-
-      const assessment = await SelfAssessmentService.createAssessment(userId, data);
-
-      //  Award XP using config value
-      await updateUserGamification(userId, xpRewards.selfAssessment);
+      const assessment = await SelfAssessmentService.createAssessment(userId, req.body);
 
       res.status(201).json({
         success: true,
-        message: `Self-assessment completed successfully. ${xpRewards.selfAssessment} XP added.`,
-        data: assessment
+        message: assessment.message, // XP and success message from service
+        data: assessment.data
       });
     } catch (err) {
       next(new AppError(err.message, err.statusCode || 400));
@@ -38,9 +31,14 @@ class SelfAssessmentController {
     try {
       const { userId } = req.params;
       const assessment = await SelfAssessmentService.getAssessment(userId);
+
+      if (!assessment || assessment.length === 0) {
+        return next(new AppError('No self-assessments found for this user', 404));
+      }
+
       res.status(200).json({ success: true, data: assessment });
     } catch (err) {
-      next(new AppError(err.message, err.statusCode || 400));
+      next(new AppError(err.message, err.statusCode || 500));
     }
   }
 }

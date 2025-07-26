@@ -1,12 +1,12 @@
 const SelfAssessment = require('../models/SelfAssessment');
 
 class SelfAssessmentRepository {
-  async create(data) {
-    return await SelfAssessment.create(data);
+  async create(data, session = null) {
+    return await SelfAssessment.create([data], session ? { session } : {});
   }
 
   async findByUserId(userId) {
-    return await SelfAssessment.find({ userId });
+    return await SelfAssessment.find({ userId }).sort({ createdAt: -1 });
   }
 
   async findById(id) {
@@ -14,7 +14,10 @@ class SelfAssessmentRepository {
   }
 
   async update(id, data) {
-    return await SelfAssessment.findByIdAndUpdate(id, data, { new: true });
+    return await SelfAssessment.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true
+    });
   }
 
   async delete(id) {

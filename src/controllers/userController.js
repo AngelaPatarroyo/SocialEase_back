@@ -1,19 +1,10 @@
-const User = require('../models/User');
+const UserService = require('../services/userService');
 const AppError = require('../utils/errors');
 
 class UserController {
-  /**
-   * @desc Get logged-in user profile
-   * @route GET /api/user/profile
-   * @access Private
-   */
   async getProfile(req, res, next) {
     try {
-      const user = await User.findById(req.user.id).select('-password');
-      if (!user) {
-        return next(new AppError('User not found', 404));
-      }
-
+      const user = await UserService.getProfile(req.user.id);
       res.status(200).json({
         success: true,
         data: {
@@ -29,28 +20,15 @@ class UserController {
         }
       });
     } catch (error) {
-      next(new AppError(error.message, 500));
+      next(error);
     }
   }
 
-  /**
-   * @desc Update logged-in user profile
-   * @route PUT /api/user/profile
-   * @access Private
-   */
   async updateProfile(req, res, next) {
     try {
       const { name, avatar, theme } = req.body;
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        return next(new AppError('User not found', 404));
-      }
-
-      if (name) user.name = name;
-      if (avatar) user.avatar = avatar;
-      if (theme) user.theme = theme;
-
-      await user.save();
+      const updates = { name, avatar, theme };
+      const user = await UserService.updateProfile(req.user.id, updates);
 
       res.status(200).json({
         success: true,
@@ -68,7 +46,7 @@ class UserController {
         }
       });
     } catch (error) {
-      next(new AppError(error.message, 500));
+      next(error);
     }
   }
 }

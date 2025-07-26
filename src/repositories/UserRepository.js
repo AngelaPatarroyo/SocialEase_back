@@ -13,8 +13,28 @@ class UserRepository {
     return await User.findById(id);
   }
 
+  async findAll() {
+    return await User.find().select('-password').sort({ createdAt: -1 });
+  }
+
   async update(id, data) {
-    return await User.findByIdAndUpdate(id, data, { new: true });
+    return await User.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+  }
+
+  async updateRole(id, role) {
+    return await User.findByIdAndUpdate(id, { role }, { new: true, runValidators: true });
+  }
+
+  async delete(id) {
+    return await User.findByIdAndDelete(id);
+  }
+
+  async count() {
+    return await User.countDocuments();
+  }
+
+  async getRoleStats() {
+    return await User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]);
   }
 }
 

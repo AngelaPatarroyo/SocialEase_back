@@ -6,7 +6,7 @@ class ScenarioRepository {
   }
 
   async findAll() {
-    return await Scenario.find();
+    return await Scenario.find().sort({ createdAt: -1 });
   }
 
   async findById(id) {
@@ -14,11 +14,15 @@ class ScenarioRepository {
   }
 
   async update(id, data) {
-    return await Scenario.findByIdAndUpdate(id, data, { new: true });
+    return await Scenario.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   }
 
   async delete(id) {
     return await Scenario.findByIdAndDelete(id);
+  }
+
+  async count() {
+    return await Scenario.countDocuments();
   }
 }
 

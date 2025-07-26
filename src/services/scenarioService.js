@@ -1,51 +1,95 @@
+const mongoose = require('mongoose');
 const ScenarioRepository = require('../repositories/ScenarioRepository');
-const User = require('../models/User');
-const { addXP } = require('../utils/xpManager');
-const { awardBadge } = require('../utils/badgeManager');
+const { updateUserGamification } = require('./gamificationService');
+const ProgressService = require('./progressService');
+const xpRewards = require('../config/xpRewards');
+const AppError = require('../utils/errors');
 
 class ScenarioService {
-  async createScenario(data) {
-    return await ScenarioRepository.create(data);
-  }
-
   async getAllScenarios() {
     return await ScenarioRepository.findAll();
   }
 
+  async getScenarioById(id) {
+    this.validateObjectId(id, 'Scenario');
+    const scenario = await ScenarioRepository.findById(id);
+    if (!scenario) throw new AppError('Scenario not found', 404);
+    return scenario;
+  }
+
+  async createScenario(data) {
+    this.validateScenarioData(data);
+    return await ScenarioRepository.create(data);
+  }
+
   async updateScenario(id, data) {
-    return await ScenarioRepository.update(id, data);
+    this.validateObjectId(id, 'Scenario');
+    this.validateScenarioData(data, false); // Partial validation for update
+    const scenario = await ScenarioRepository.update(id, data);
+    if (!scenario) throw new AppError('Scenario not found', 404);
+    return scenario;
   }
 
   async deleteScenario(id) {
-    return await ScenarioRepository.delete(id);
+    this.validateObjectId(id, 'Scenario');
+    const scenario = await ScenarioRepository.delete(id);
+    if (!scenario) throw new AppError('Scenario not found', 404);
+    return scenario;
   }
 
   /**
-   *  Mark a scenario as completed by a user
-   * - Adds XP based on scenario points
-   * - Updates user level
-   * - Awards badges for milestones
+   * Mark scenario as completed and update XP + progress in one atomic transaction.
    */
   async completeScenario(userId, scenarioId) {
-    const scenario = await ScenarioRepository.findById(scenarioId);
-    if (!scenario) throw new Error('Scenario not found');
+    this.validateObjectId(scenarioId, 'Scenario');
 
-    const user = await User.findById(userId);
-    if (!user) throw new Error('User not found');
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const scenario = await ScenarioRepository.findById(scenarioId);
+      if (!scenario) throw new AppError('Scenario not found', 404);
 
-    //  Add XP (use scenario.points or default to 20)
-    await addXP(userId, scenario.points || 20);
+      const xpEarned = scenario.points || xpRewards.scenarioCompletion;
 
-    //  Badge logic (example)
-    const completedCount = await ScenarioRepository.countCompletedByUser(userId);
-    if (completedCount === 1) {
-      await awardBadge(user, 'First Scenario');
+      // Award XP and update progress atomically
+      await updateUserGamification(userId, xpEarned, session);
+      await ProgressService.updateProgress(userId, scenarioId, session);
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return `Scenario completed! You earned ${xpEarned} XP and your progress has been updated.`;
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new AppError(error.message, 500);
     }
-    if (completedCount === 5) {
-      await awardBadge(user, 'Explorer');
-    }
+  }
 
-    return { message: 'Scenario completed, XP awarded', xpGained: scenario.points || 20 };
+  /**
+   * Validate MongoDB ObjectId
+   */
+  validateObjectId(id, resourceName) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError(`${resourceName} ID is invalid`, 400);
+    }
+  }
+
+  /**
+   * Validate scenario data
+   * - For create: title, description, difficulty, points required
+   * - For update: partial allowed
+   */
+  validateScenarioData(data, isCreate = true) {
+    const { title, description, difficulty, points } = data;
+    if (isCreate) {
+      if (!title || !description || !difficulty) {
+        throw new AppError('Title, description, and difficulty are required', 400);
+      }
+    }
+    if (points && typeof points !== 'number') {
+      throw new AppError('Points must be a number', 400);
+    }
   }
 }
 
