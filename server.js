@@ -74,3 +74,6 @@ mongoose.connect(process.env.MONGO_URI)
 // Start Server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const userRoutes = require('./src/routes/userRoutes');
+app.use('/api/user', userRoutes);

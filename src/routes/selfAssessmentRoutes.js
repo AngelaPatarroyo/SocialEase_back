@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const SelfAssessmentController = require('../controllers/selfAssessmentController');
-const { selfAssessmentValidation } = require('../validators/selfAssessmentValidator');
-const validateRequest = require('../middleware/validateRequest');
+const { selfAssessmentValidation, paramUserIdValidation } = require('../validators/selfAssessmentValidator');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 
 /**
  * @swagger
@@ -30,27 +30,34 @@ const { authMiddleware } = require('../middleware/authMiddleware');
  *               socialLevel:
  *                 type: string
  *                 enum: [low, medium, high]
+ *                 example: medium
  *               primaryGoal:
  *                 type: string
+ *                 example: Improve conversation skills
  *               comfortZones:
  *                 type: array
  *                 items:
  *                   type: string
+ *                 example: ["Work", "Friends"]
  *               preferredScenarios:
  *                 type: array
  *                 items:
  *                   type: string
+ *                 example: ["Networking", "Public Speaking"]
  *               anxietyTriggers:
  *                 type: array
  *                 items:
  *                   type: string
+ *                 example: ["Crowded places"]
  *               communicationConfidence:
  *                 type: number
+ *                 example: 6
  *               socialFrequency:
  *                 type: string
+ *                 example: weekly
  *     responses:
  *       201:
- *         description: Self-assessment completed
+ *         description: Self-assessment completed successfully
  */
 router.post('/', authMiddleware, selfAssessmentValidation, validateRequest, SelfAssessmentController.create);
 
@@ -58,7 +65,7 @@ router.post('/', authMiddleware, selfAssessmentValidation, validateRequest, Self
  * @swagger
  * /api/self-assessment/{userId}:
  *   get:
- *     summary: Get self-assessment for a user
+ *     summary: Get user's self-assessment
  *     tags: [SelfAssessment]
  *     security:
  *       - bearerAuth: []
@@ -66,10 +73,12 @@ router.post('/', authMiddleware, selfAssessmentValidation, validateRequest, Self
  *       - name: userId
  *         in: path
  *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Self-assessment data
+ *         description: Self-assessment details
  */
-router.get('/:userId', authMiddleware, SelfAssessmentController.getUserAssessment);
+router.get('/:userId', authMiddleware, paramUserIdValidation, validateRequest, SelfAssessmentController.getUserAssessment);
 
 module.exports = router;

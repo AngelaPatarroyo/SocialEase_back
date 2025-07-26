@@ -1,7 +1,7 @@
 const express = require('express');
-const { body, param } = require('express-validator');
 const router = express.Router();
 const ProgressController = require('../controllers/progressController');
+const { updateProgressValidation, paramUserIdValidation } = require('../validators/progressValidator');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 
@@ -9,14 +9,14 @@ const validateRequest = require('../middleware/validateRequest');
  * @swagger
  * tags:
  *   name: Progress
- *   description: Progress tracking endpoints
+ *   description: Track user scenario progress
  */
 
 /**
  * @swagger
  * /api/progress/update:
  *   post:
- *     summary: Update user progress after completing a scenario
+ *     summary: Update user progress for a scenario
  *     tags: [Progress]
  *     security:
  *       - bearerAuth: []
@@ -27,35 +27,24 @@ const validateRequest = require('../middleware/validateRequest');
  *           schema:
  *             type: object
  *             properties:
- *               userId:
- *                 type: string
  *               scenarioId:
  *                 type: string
+ *                 example: 64ad0fcb9d6b2e987d01f3c5
  *               status:
  *                 type: string
- *                 enum: [completed, pending]
+ *                 enum: [completed, in-progress]
+ *                 example: completed
  *     responses:
  *       200:
  *         description: Progress updated successfully
- *       400:
- *         description: Validation error
  */
-router.post('/update',
-  authMiddleware,
-  [
-    body('userId').isMongoId().withMessage('Valid userId is required'),
-    body('scenarioId').isMongoId().withMessage('Valid scenarioId is required'),
-    body('status').isIn(['completed', 'pending']).withMessage('Status must be either completed or pending')
-  ],
-  validateRequest,
-  (req, res) => ProgressController.updateProgress(req, res)
-);
+router.post('/update', authMiddleware, updateProgressValidation, validateRequest, ProgressController.updateProgress);
 
 /**
  * @swagger
  * /api/progress/{userId}:
  *   get:
- *     summary: Get progress data for a specific user
+ *     summary: Get user's progress history
  *     tags: [Progress]
  *     security:
  *       - bearerAuth: []
@@ -67,17 +56,8 @@ router.post('/update',
  *           type: string
  *     responses:
  *       200:
- *         description: Progress data retrieved successfully
- *       400:
- *         description: Validation error
+ *         description: List of user's progress
  */
-router.get('/:userId',
-  authMiddleware,
-  [
-    param('userId').isMongoId().withMessage('Valid userId is required')
-  ],
-  validateRequest,
-  (req, res) => ProgressController.getProgress(req, res)
-);
+router.get('/:userId', authMiddleware, paramUserIdValidation, validateRequest, ProgressController.getUserProgress);
 
 module.exports = router;

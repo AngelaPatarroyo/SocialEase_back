@@ -6,12 +6,16 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
 
+  // Profile fields
+  avatar: { type: String, default: 'default-avatar.png' },
+  theme: { type: String, enum: ['light', 'dark'], default: 'light' },
+
   // Gamification fields
   xp: { type: Number, default: 0 },
   level: { type: Number, default: 1 },
-  badges: [{ type: String }], // Achievements
-  streak: { type: Number, default: 0 }, // Daily streak counter
-  lastCompletedDate: { type: Date } // Last completed scenario for streak calculation
+  badges: [{ type: String }],
+  streak: { type: Number, default: 0 },
+  lastCompletedDate: { type: Date }
 
 }, { timestamps: true });
 

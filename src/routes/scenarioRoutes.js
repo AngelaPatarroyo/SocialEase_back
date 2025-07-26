@@ -1,22 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const ScenarioController = require('../controllers/scenarioController');
-const { createScenarioValidation } = require('../validators/scenarioValidator');
-const validateRequest = require('../middleware/validateRequest');
+const { createScenarioValidation, paramIdValidation } = require('../validators/scenarioValidator');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 
 /**
  * @swagger
  * tags:
  *   name: Scenarios
- *   description: Manage scenarios
+ *   description: Scenario Management
  */
 
 /**
  * @swagger
  * /api/scenarios:
  *   post:
- *     summary: Create a new scenario
+ *     summary: Create a scenario
  *     tags: [Scenarios]
  *     security:
  *       - bearerAuth: []
@@ -32,26 +32,15 @@ const { authMiddleware } = require('../middleware/authMiddleware');
  *                 example: Public Speaking Practice
  *               description:
  *                 type: string
- *                 example: A scenario to practice speaking in front of an audience
+ *                 example: Improve confidence by speaking in a group
  *               difficulty:
  *                 type: string
  *                 enum: [easy, medium, hard]
- *                 example: medium
  *     responses:
  *       201:
  *         description: Scenario created successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
  */
-router.post(
-  '/',
-  authMiddleware,
-  createScenarioValidation,
-  validateRequest,
-  ScenarioController.createScenario
-);
+router.post('/', authMiddleware, createScenarioValidation, validateRequest, ScenarioController.createScenario);
 
 /**
  * @swagger
@@ -63,9 +52,7 @@ router.post(
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of scenarios retrieved successfully
- *       401:
- *         description: Unauthorized
+ *         description: List of scenarios
  */
 router.get('/', authMiddleware, ScenarioController.getScenarios);
 
@@ -73,7 +60,7 @@ router.get('/', authMiddleware, ScenarioController.getScenarios);
  * @swagger
  * /api/scenarios/{id}:
  *   get:
- *     summary: Get a scenario by ID
+ *     summary: Get scenario by ID
  *     tags: [Scenarios]
  *     security:
  *       - bearerAuth: []
@@ -86,75 +73,29 @@ router.get('/', authMiddleware, ScenarioController.getScenarios);
  *     responses:
  *       200:
  *         description: Scenario details
- *       404:
- *         description: Scenario not found
  */
-router.get('/:id', authMiddleware, ScenarioController.getScenarioById);
+router.get('/:id', authMiddleware, paramIdValidation, validateRequest, ScenarioController.getScenarioById);
 
 /**
  * @swagger
  * /api/scenarios/{id}:
  *   put:
- *     summary: Update an existing scenario
+ *     summary: Update scenario
  *     tags: [Scenarios]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *                 example: Updated Scenario Title
- *               description:
- *                 type: string
- *                 example: Updated description for scenario
- *               difficulty:
- *                 type: string
- *                 enum: [easy, medium, hard]
- *     responses:
- *       200:
- *         description: Scenario updated successfully
- *       404:
- *         description: Scenario not found
  */
-router.put(
-  '/:id',
-  authMiddleware,
-  createScenarioValidation,
-  validateRequest,
-  ScenarioController.updateScenario
-);
+router.put('/:id', authMiddleware, paramIdValidation, createScenarioValidation, validateRequest, ScenarioController.updateScenario);
 
 /**
  * @swagger
  * /api/scenarios/{id}:
  *   delete:
- *     summary: Delete a scenario
+ *     summary: Delete scenario
  *     tags: [Scenarios]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Scenario deleted successfully
- *       404:
- *         description: Scenario not found
  */
-router.delete('/:id', authMiddleware, ScenarioController.deleteScenario);
+router.delete('/:id', authMiddleware, paramIdValidation, validateRequest, ScenarioController.deleteScenario);
 
 module.exports = router;

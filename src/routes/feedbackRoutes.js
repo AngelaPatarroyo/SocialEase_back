@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const FeedbackController = require('../controllers/feedbackController');
-const { createFeedbackValidation } = require('../validators/feedbackValidator');
+const { createFeedbackValidation, paramUserIdValidation } = require('../validators/feedbackValidator');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 
@@ -9,7 +9,7 @@ const validateRequest = require('../middleware/validateRequest');
  * @swagger
  * tags:
  *   name: Feedback
- *   description: User feedback endpoints
+ *   description: Submit and view feedback for scenarios
  */
 
 /**
@@ -29,16 +29,21 @@ const validateRequest = require('../middleware/validateRequest');
  *             properties:
  *               userId:
  *                 type: string
+ *                 example: 64ad0fcb9d6b2e987d01f3b2
  *               scenarioId:
  *                 type: string
+ *                 example: 64ad0fcb9d6b2e987d01f3c5
  *               reflection:
  *                 type: string
+ *                 example: "This scenario helped improve my confidence"
  *               rating:
  *                 type: integer
  *                 example: 5
  *     responses:
  *       201:
  *         description: Feedback submitted successfully
+ *       400:
+ *         description: Validation error
  */
 router.post('/', authMiddleware, createFeedbackValidation, validateRequest, FeedbackController.submit);
 
@@ -46,7 +51,7 @@ router.post('/', authMiddleware, createFeedbackValidation, validateRequest, Feed
  * @swagger
  * /api/feedback/{userId}:
  *   get:
- *     summary: Get feedback submitted by a user
+ *     summary: Get all feedback submitted by a user
  *     tags: [Feedback]
  *     security:
  *       - bearerAuth: []
@@ -58,8 +63,10 @@ router.post('/', authMiddleware, createFeedbackValidation, validateRequest, Feed
  *           type: string
  *     responses:
  *       200:
- *         description: List of feedback by user
+ *         description: List of feedback entries
+ *       404:
+ *         description: No feedback found
  */
-router.get('/:userId', authMiddleware, FeedbackController.getUserFeedback);
+router.get('/:userId', authMiddleware, paramUserIdValidation, validateRequest, FeedbackController.getUserFeedback);
 
 module.exports = router;

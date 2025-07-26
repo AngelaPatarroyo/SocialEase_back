@@ -8,7 +8,7 @@ const validateRequest = require('../middleware/validateRequest');
  * @swagger
  * tags:
  *   name: Auth
- *   description: Authentication endpoints
+ *   description: User Authentication
  */
 
 /**
@@ -40,14 +40,6 @@ const validateRequest = require('../middleware/validateRequest');
  *     responses:
  *       201:
  *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: User registered successfully
  *       400:
  *         description: Validation error
  */
@@ -57,7 +49,7 @@ router.post('/register', registerValidation, validateRequest, AuthController.reg
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login user and get JWT token
+ *     summary: Login a user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -78,26 +70,6 @@ router.post('/register', registerValidation, validateRequest, AuthController.reg
  *     responses:
  *       200:
  *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: 64ad0fcb9d6b2e987d01f3b2
- *                     name:
- *                       type: string
- *                       example: John Doe
- *                     email:
- *                       type: string
- *                       example: john@example.com
  *       401:
  *         description: Invalid credentials
  */
