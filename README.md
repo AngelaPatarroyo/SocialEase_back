@@ -70,30 +70,28 @@ http://localhost:4000/api/docs
 
 ✅ Main API Endpoints
 
-| Resource        | Method | Endpoint                              | Description                  |
-| --------------- | ------ | ------------------------------------- | ---------------------------- |
-| **Auth**        | POST   | `/api/auth/register`                  | Register user                |
-|                 | POST   | `/api/auth/login`                     | Login user                   |
-| **Profile**     | GET    | `/api/user/profile`                   | Get user profile             |
-|                 | PUT    | `/api/user/profile`                   | Update user profile          |
-| **Scenarios**   | GET    | `/api/scenarios`                      | Get all scenarios            |
-|                 | POST   | `/api/scenarios`                      | Create scenario (Admin)      |
-|                 | POST   | `/api/scenarios/:scenarioId/complete` | Complete scenario & award XP |
-| **Feedback**    | POST   | `/api/feedback`                       | Submit feedback              |
-|                 | GET    | `/api/feedback/:userId`               | Get user feedback            |
-| **Progress**    | GET    | `/api/progress/:userId`               | Get user progress            |
-| **Self-Assess** | POST   | `/api/self-assessment`                | Submit self-assessment       |
-|                 | GET    | `/api/self-assessment/:userId`        | Get user assessments         |
+| Resource      | Method | Endpoint                            | Description                 |
+| ------------- | ------ | ----------------------------------- | --------------------------- |
+| **Scenarios** | GET    | `/api/scenarios/adaptive`           | Get recommended scenario    |
+|               | POST   | `/api/scenarios/:scenarioId/replay` | Replay scenario             |
+|               | GET    | `/api/scenarios/skip`               | Skip current scenario       |
+|               | GET    | `/api/scenarios/vr`                 | Get VR-compatible scenarios |
+| **Goals**     | POST   | `/api/goals`                        | Create a goal               |
+|               | GET    | `/api/goals`                        | Get user goals              |
+|               | PUT    | `/api/goals/:goalId/progress`       | Update goal progress        |
+|               | DELETE | `/api/goals/:goalId`                | Delete a goal               |
+| **Dashboard** | GET    | `/api/user/dashboard`               | Get user progress dashboard |
 
-✅ Features
-✔ JWT Authentication
-✔ User Profile Management
-✔ Scenario Management (CRUD + Completion)
-✔ Gamification: XP, Levels, Badges, Streaks
-✔ Feedback System
-✔ Self-Assessment Module
-✔ Progress Tracking
-✔ Swagger API Docs
+
+## ** Features **
+## ** JWT Authentication **
+## **User Profile Management **
+## ** Scenario Management (CRUD + Completion) **
+## ** Gamification: XP, Levels, Badges, Streaks **
+## ** Feedback System **
+## ** Self-Assessment Module **
+## ** Progress Tracking **
+## ** Swagger API Docs **
 
 ✅ Security Features
 JWT Authentication for all protected routes
