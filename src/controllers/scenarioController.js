@@ -2,6 +2,7 @@ const Scenario = require('../models/Scenario');
 const AppError = require('../utils/errors');
 const { updateUserGamification } = require('../services/gamificationService');
 const ProgressService = require('../services/progressService');
+const xpRewards = require('../config/xpRewards'); // Import XP config
 
 class ScenarioController {
   /**
@@ -112,12 +113,13 @@ class ScenarioController {
       const scenario = await Scenario.findById(scenarioId);
       if (!scenario) return next(new AppError('Scenario not found', 404));
 
-      const xpEarned = scenario.points || 50;
+      // ✅ Award XP from config (or use scenario.points if dynamic)
+      const xpEarned = scenario.points || xpRewards.scenarioCompletion;
 
-      // ✅ Update user gamification (XP, level, streak, badges)
+      // Update user gamification (XP, level, streak, badges)
       await updateUserGamification(req.user.id, xpEarned);
 
-      // ✅ Update progress (track completed scenarios)
+      // Update progress (track completed scenarios)
       await ProgressService.updateProgress(req.user.id, scenarioId);
 
       res.status(200).json({

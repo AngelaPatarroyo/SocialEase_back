@@ -1,5 +1,6 @@
 const FeedbackService = require('../services/feedbackService');
 const { updateUserGamification } = require('../services/gamificationService');
+const xpRewards = require('../config/xpRewards'); //  Import XP config
 const AppError = require('../utils/errors');
 
 class FeedbackController {
@@ -10,18 +11,18 @@ class FeedbackController {
    */
   async submit(req, res, next) {
     try {
-      const userId = req.user.id; // Use JWT instead of request body for security
+      const userId = req.user.id; // JWT provides user ID
       const { scenarioId, reflection, rating } = req.body;
 
       const feedback = await FeedbackService.submitFeedback({ userId, scenarioId, reflection, rating });
       if (!feedback) return next(new AppError('Failed to submit feedback', 400));
 
-      // Award XP for feedback
-      await updateUserGamification(userId, 10); // 10 XP per feedback submission
+      //  Award XP using centralized config
+      await updateUserGamification(userId, xpRewards.feedback);
 
       res.status(201).json({
         success: true,
-        message: 'Feedback submitted successfully. XP updated.',
+        message: `Feedback submitted successfully. ${xpRewards.feedback} XP added.`,
         data: feedback
       });
     } catch (err) {
