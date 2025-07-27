@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const logger = require('./src/utils/logger');
 require('dotenv').config();
 
+// Import Routes
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const scenarioRoutes = require('./src/routes/scenarioRoutes');
@@ -14,17 +15,19 @@ const progressRoutes = require('./src/routes/progressRoutes');
 const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const selfAssessmentRoutes = require('./src/routes/selfAssessmentRoutes');
+const uploadRoutes = require('./src/routes/uploadRoutes');
 
+// Swagger & Error Handler
 const { swaggerUi, swaggerSpec } = require('./src/config/swagger');
 const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 
-//  Security Middleware
+// Security Middleware
 app.use(helmet());
 
-//  CORS Setup (Allow localhost:3000 and your production domain)
-const allowedOrigins = ['http://localhost:3000', 'https://yourfrontend.com'];
+// CORS Setup
+const allowedOrigins = ['http://localhost:3000', process.env.FRONTEND_URL];
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -37,14 +40,13 @@ app.use(cors({
   credentials: true,
 }));
 
-//  Global Rate Limiter
-app.use(rateLimit({
+// Global Rate Limiter
+const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
   message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-}));
+});
+app.use(globalLimiter);
 
 //  Logging with Morgan and Winston
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
@@ -52,17 +54,17 @@ app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) }
 //  Body Parser
 app.use(express.json());
 
-//  Login Rate Limiter
+//  Login-specific Rate Limiter
 app.use('/api/auth/login', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: 'Too many login attempts, please try again later.',
 }));
 
-// Swagger Docs
+//  Swagger Documentation
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-//  Routes
+//  API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/scenarios', scenarioRoutes);
@@ -70,12 +72,10 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
-const uploadRoutes = require('./src/routes/uploadRoutes');
 app.use('/api/upload', uploadRoutes);
 
-
-// Test Route
-app.get('/test', (req, res) => res.send('API is working'));
+//  Test Route
+app.get('/test', (req, res) => res.send('API is working ✅'));
 
 //  404 Handler
 app.use((req, res) => {
@@ -87,8 +87,8 @@ app.use(errorHandler);
 
 //  MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch((err) => console.error(' MongoDB Connection Error:', err));
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 //  Start Server
 const PORT = process.env.PORT || 4000;

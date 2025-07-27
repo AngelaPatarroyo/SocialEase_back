@@ -5,26 +5,37 @@ const cloudinary = require('../config/cloudinary');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 const router = express.Router();
-const upload = multer({ dest: 'temp/' });
-//  POST /api/upload/avatar
+
+const upload = multer({
+  dest: 'temp/',
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type. Only JPG, PNG, WEBP allowed.'));
+  }
+});
+
 router.post('/avatar', authMiddleware, upload.single('file'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' });
-    }
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
 
-    //  Upload to Cloudinary
+    // ✅ Upload to Cloudinary
     const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'avatars'
+      folder: 'avatars',
+      width: 400,
+      height: 400,
+      crop: 'fill',
+      gravity: 'face'
     });
 
-    // Delete temp file
+    // Delete local temp file
     fs.unlinkSync(req.file.path);
 
-    return res.status(200).json({ success: true, url: result.secure_url });
+    res.status(200).json({ success: true, url: result.secure_url });
   } catch (error) {
-    console.error('Cloudinary Upload Error:', error);
-    return res.status(500).json({ success: false, message: 'Upload failed' });
+    console.error('❌ Cloudinary Upload Error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Upload failed' });
   }
 });
 
