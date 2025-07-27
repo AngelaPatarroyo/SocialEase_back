@@ -10,7 +10,7 @@ class UserRepository {
   }
 
   async findById(id) {
-    return await User.findById(id);
+    return await User.findById(id).select('-password'); // ✅ Hide password
   }
 
   async findAll() {

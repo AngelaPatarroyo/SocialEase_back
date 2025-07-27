@@ -40,59 +40,33 @@ const router = express.Router();
  *     tags: [Profile]
  *     security:
  *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Dashboard fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Your personal progress dashboard
- *                 data:
- *                   type: object
- *                   properties:
- *                     stats:
- *                       type: object
- *                       properties:
- *                         xp:
- *                           type: number
- *                           example: 450
- *                         level:
- *                           type: number
- *                           example: 3
- *                         streak:
- *                           type: number
- *                           example: 5
- *                         badges:
- *                           type: array
- *                           items:
- *                             type: string
- *                           example: ["Feedback Champ", "Consistency Hero"]
- *                     progress:
- *                       type: object
- *                       properties:
- *                         completedScenariosCount:
- *                           type: number
- *                           example: 7
- *                         recentScenarios:
- *                           type: array
- *                           items:
- *                             type: string
- *                           example: ["scenarioId1", "scenarioId2"]
- *                     messages:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["You're on a 5-day streak! Great consistency."]
  */
 
-// Validation rules for updating profile
+/**
+ * @swagger
+ * /user/password:
+ *   put:
+ *     summary: Update user password
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ */
+
+//  Validation for updating profile
 const updateProfileValidation = [
   body('name')
     .optional()
@@ -110,11 +84,35 @@ const updateProfileValidation = [
     .withMessage('Theme must be either light or dark')
 ];
 
-// Routes
-router.get('/profile', authMiddleware, UserController.getProfile);
-router.put('/profile', authMiddleware, updateProfileValidation, validateRequest, UserController.updateProfile);
+//  Validation for updating password
+const updatePasswordValidation = [
+  body('currentPassword')
+    .notEmpty()
+    .withMessage('Current password is required'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters long')
+];
 
-//  New Dashboard Route
+//  Routes
+router.get('/profile', authMiddleware, UserController.getProfile);
+
+router.put(
+  '/profile',
+  authMiddleware,
+  updateProfileValidation,
+  validateRequest,
+  UserController.updateProfile
+);
+
 router.get('/dashboard', authMiddleware, UserController.getDashboard);
+
+router.put(
+  '/password',
+  authMiddleware,
+  updatePasswordValidation,
+  validateRequest,
+  UserController.updatePassword
+);
 
 module.exports = router;

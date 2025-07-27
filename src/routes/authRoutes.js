@@ -17,31 +17,6 @@ const validateRequest = require('../middleware/validateRequest');
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *                 example: John Doe
- *               email:
- *                 type: string
- *                 example: john@example.com
- *               password:
- *                 type: string
- *                 example: StrongPass#123
- *     responses:
- *       201:
- *         description: User registered successfully
- *       400:
- *         description: Validation error
  */
 router.post('/register', registerValidation, validateRequest, AuthController.register);
 
@@ -51,28 +26,32 @@ router.post('/register', registerValidation, validateRequest, AuthController.reg
  *   post:
  *     summary: Login a user
  *     tags: [Auth]
+ */
+router.post('/login', loginValidation, validateRequest, AuthController.login);
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   post:
+ *     summary: Register or login using Google account
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - email
- *               - password
  *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
  *               email:
  *                 type: string
- *                 example: john@example.com
- *               password:
+ *                 example: john@gmail.com
+ *               avatar:
  *                 type: string
- *                 example: StrongPass#123
- *     responses:
- *       200:
- *         description: Login successful
- *       401:
- *         description: Invalid credentials
+ *                 example: https://example.com/avatar.jpg
  */
-router.post('/login', loginValidation, validateRequest, AuthController.login);
+router.post('/google', AuthController.googleLogin);
 
 module.exports = router;

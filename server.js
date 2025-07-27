@@ -70,6 +70,9 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
+const uploadRoutes = require('./src/routes/uploadRoutes');
+app.use('/api/upload', uploadRoutes);
+
 
 // Test Route
 app.get('/test', (req, res) => res.send('API is working'));
