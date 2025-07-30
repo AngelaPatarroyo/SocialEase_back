@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const calculateLevel = require('../utils/levelCalculator');
+const calculateLevel = require('../utils/calculateSocialLevel');
 const badgeManager = require('../utils/badgeManager');
 
 async function updateUserGamification(userId, xpEarned) {

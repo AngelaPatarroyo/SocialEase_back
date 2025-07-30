@@ -3,7 +3,7 @@ const SelfAssessmentRepository = require('../repositories/SelfAssessmentReposito
 const { updateUserGamification } = require('./gamificationService');
 const xpRewards = require('../config/xpRewards');
 const AppError = require('../utils/errors');
-
+const calculateSocialLevel = require('../utils/calculateSocialLevel'); 
 class SelfAssessmentService {
   async createAssessment(userId, data) {
     this.validateAssessmentData(data);
@@ -12,9 +12,22 @@ class SelfAssessmentService {
     session.startTransaction();
 
     try {
-      const assessment = await SelfAssessmentRepository.create({ userId, ...data }, session);
+      // Calculate social level from key inputs
+      const socialLevel = calculateSocialLevel({
+        communicationConfidence: data.communicationConfidence,
+        socialFrequency: data.socialFrequency,
+        anxietyTriggers: data.anxietyTriggers,
+      });
 
-      // Award XP inside the same transaction for consistency
+      console.log('📥 Received self-assessment payload:', data);
+      console.log('🧠 Calculated socialLevel:', socialLevel);
+
+      const assessment = await SelfAssessmentRepository.create(
+        { userId, ...data, socialLevel },
+        session
+      );
+
+      console.log(`🎯 Awarding ${xpRewards.selfAssessment} XP to user ${userId}`);
       await updateUserGamification(userId, xpRewards.selfAssessment, session);
 
       await session.commitTransaction();
@@ -22,12 +35,13 @@ class SelfAssessmentService {
 
       return {
         message: `Self-assessment completed successfully. ${xpRewards.selfAssessment} XP added.`,
-        data: assessment
+        data: assessment,
       };
     } catch (error) {
+      console.error('❌ Self-assessment creation failed:', error);
       await session.abortTransaction();
       session.endSession();
-      throw new AppError(error.message, 500);
+      throw new AppError(error.message || 'Internal Server Error', 500);
     }
   }
 
@@ -42,8 +56,29 @@ class SelfAssessmentService {
     if (!data || Object.keys(data).length === 0) {
       throw new AppError('Assessment data cannot be empty', 400);
     }
-    if (data.score && (isNaN(data.score) || data.score < 0)) {
-      throw new AppError('Score must be a positive number', 400);
+
+    const required = [
+      'scenarioId',
+      'confidenceBefore',
+      'confidenceAfter',
+      'reflectionPositive',
+      'reflectionNegative',
+      'reflectionNegativeThoughts',
+      'reflectionAlternativeThoughts',
+      'reflectionActionPlan',
+      'reflectionCompassion',
+      'primaryGoal',
+      'comfortZones',
+      'preferredScenarios',
+      'anxietyTriggers',
+      'socialFrequency',
+      'communicationConfidence',
+    ];
+
+    for (const key of required) {
+      if (data[key] === undefined || data[key] === null) {
+        throw new AppError(`Missing required field: ${key}`, 400);
+      }
     }
   }
 }
