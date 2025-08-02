@@ -1,24 +1,17 @@
 const mongoose = require('mongoose');
 
-const selfAssessmentSchema = new mongoose.Schema({
+const SelfAssessmentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  socialLevel: { type: String, enum: ['low', 'medium', 'high'], required: true },
-  primaryGoal: { type: String },
-  comfortZones: [{ type: String }],
-  preferredScenarios: [{ type: String }],
-  anxietyTriggers: [{ type: String }],
-  communicationConfidence: { type: Number, min: 1, max: 10 },
-  socialFrequency: { type: String }, // e.g., "daily", "weekly", "rarely"
+  confidenceBefore: { type: Number, required: true },
+  confidenceAfter: { type: Number, required: true },
+  primaryGoal: { type: String, required: true },
+  comfortZones: { type: [String], required: true },
+  preferredScenarios: { type: [String], required: true },
+  anxietyTriggers: { type: [String], required: true },
+  socialFrequency: { type: String, required: true },
+  communicationConfidence: { type: String, required: true },
+  socialLevel: { type: Number, required: false },
+  createdAt: { type: Date, default: Date.now }
+});
 
-  //  Add these:
-  confidenceBefore: { type: Number, min: 1, max: 10 },
-  confidenceAfter: { type: Number, min: 1, max: 10 },
-  reflectionPositive: { type: String },
-  reflectionNegative: { type: String },
-  reflectionNegativeThoughts: { type: String },
-  reflectionAlternativeThoughts: { type: String },
-  reflectionActionPlan: { type: String },
-  reflectionCompassion: { type: String }
-}, { timestamps: true });
-
-module.exports = mongoose.model('SelfAssessment', selfAssessmentSchema);
+module.exports = mongoose.model('SelfAssessment', SelfAssessmentSchema);

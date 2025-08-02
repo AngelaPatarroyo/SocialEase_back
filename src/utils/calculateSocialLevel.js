@@ -1,3 +1,5 @@
+// utils/calculateSocialLevel.js
+
 module.exports = function calculateSocialLevel({ communicationConfidence, socialFrequency, anxietyTriggers = [] }) {
   let score = 0;
 
@@ -10,7 +12,7 @@ module.exports = function calculateSocialLevel({ communicationConfidence, social
   if (anxietyTriggers.length > 1) score += 2;
   else if (anxietyTriggers.length === 1) score += 1;
 
-  if (score >= 5) return 'high';
-  if (score >= 3) return 'medium';
-  return 'low';
+  if (score >= 5) return 3;      // high
+  if (score >= 3) return 2;      // medium
+  return 1;                      // low
 };

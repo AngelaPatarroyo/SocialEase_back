@@ -1,13 +1,16 @@
 const { body, param } = require('express-validator');
 
 exports.selfAssessmentValidation = [
-  body('socialLevel').isIn(['low', 'medium', 'high']).withMessage('Social level must be low, medium, or high'),
-  body('primaryGoal').optional().isString(),
-  body('comfortZones').optional().isArray(),
-  body('preferredScenarios').optional().isArray(),
-  body('anxietyTriggers').optional().isArray(),
-  body('communicationConfidence').optional().isInt({ min: 1, max: 10 }),
-  body('socialFrequency').optional().isString()
+  body('confidenceBefore').isInt({ min: 1, max: 10 }),
+  body('confidenceAfter').isInt({ min: 1, max: 10 }),
+  body('primaryGoal').notEmpty(),
+  body('comfortZones').isArray({ min: 1 }),
+  body('preferredScenarios').isArray({ min: 1 }),
+  body('anxietyTriggers').isArray(),
+  body('socialFrequency').isString().notEmpty(),
+  body('communicationConfidence')
+    .isString()
+    .notEmpty()
 ];
 
 exports.paramUserIdValidation = [

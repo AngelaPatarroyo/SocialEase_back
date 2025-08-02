@@ -3,10 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const AppError = require('../utils/errors');
-
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  throw new Error('Missing Google OAuth environment variables');
-}
+const crypto = require('crypto');
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -14,10 +11,77 @@ const oauth2Client = new google.auth.OAuth2(
   `${process.env.API_BASE_URL}/api/auth/google/callback`
 );
 
-class AuthController {
-  /**
-   * Google OAuth redirect
-   */
+const AuthController = {
+  async register(req, res, next) {
+    try {
+      const { name, email, password } = req.body;
+      if (!name || !email || !password) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(409).json({ message: 'User already exists' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+        avatar: 'default-avatar.png',
+        role: 'user',
+        theme: 'light',
+        xp: 0,
+        level: 1,
+        streak: 0,
+        badges: [],
+        goals: [],
+      });
+
+      return res.status(201).json({ message: 'Registration successful' });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async login(req, res, next) {
+    try {
+      const { email, password } = req.body;
+
+
+      const user = await User.findOne({ email }).select('+password');
+
+      if (!user || !user.password) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      const token = jwt.sign(
+        { id: user._id.toString(), role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      const userWithoutPassword = user.toObject();
+      delete userWithoutPassword.password;
+
+      return res.status(200).json({ token, user: userWithoutPassword }); //  return both
+    } catch (err) {
+      console.error('❌ Login error:', err);
+      next(err);
+    }
+  },
+
+  async logout(req, res) {
+    return res.status(200).json({ message: 'Logged out successfully' });
+  },
+
   async googleOAuth(req, res) {
     try {
       const { mode } = req.query;
@@ -37,11 +101,8 @@ class AuthController {
       console.error('Google OAuth Redirect Error:', error);
       return res.status(500).json({ message: 'Failed to initiate Google login.' });
     }
-  }
+  },
 
-  /**
-   * Google OAuth callback
-   */
   async googleCallback(req, res, next) {
     try {
       const { code, state: mode } = req.query;
@@ -66,11 +127,13 @@ class AuthController {
           return res.redirect(`${process.env.FRONTEND_URL}/register?error=User already exists`);
         }
 
+        const randomPassword = crypto.randomBytes(32).toString('hex');
+
         user = await User.create({
           name,
           email,
           avatar: picture || 'default-avatar.png',
-          password: null,
+          password: randomPassword,
           role: 'user',
           theme: 'light',
           xp: 0,
@@ -85,96 +148,18 @@ class AuthController {
         }
       }
 
-      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-        expiresIn: '7d',
-      });
+      const token = jwt.sign(
+        { id: user._id.toString(), role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
 
       return res.redirect(`${process.env.FRONTEND_URL}/google-success?token=${token}`);
     } catch (error) {
       console.error('Google OAuth Callback Error:', error);
       return next(error);
     }
-  }
+  },
+};
 
-  /**
-   * Email/Password Register
-   */
-  async register(req, res) {
-    try {
-      const { name, email, password } = req.body;
-      if (!name || !email || !password) {
-        return res.status(400).json({ message: 'All fields are required' });
-      }
-
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email already registered' });
-      }
-
-     
-      await User.create({
-        name,
-        email,
-        password, // let Mongoose hash it
-        avatar: 'default-avatar.png',
-        role: 'user',
-        theme: 'light',
-        xp: 0,
-        level: 1,
-        streak: 0,
-        badges: [],
-        goals: [],
-      });
-
-      return res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-      console.error('Registration error:', error);
-      return res.status(500).json({ message: 'Server error during registration' });
-    }
-  }
-
-  /**
-   * Email/Password Login
-   */
-  async login(req, res) {
-    try {
-      const { email, password } = req.body;
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
-      }
-
-      const user = await User.findOne({ email }).select('+password');
-      if (!user || !user.password) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-        expiresIn: '7d',
-      });
-
-      return res.status(200).json({ token, user });
-    } catch (error) {
-      console.error('Login error:', error);
-      return res.status(500).json({ message: 'Server error during login' });
-    }
-  }
-
-  /**
-   * Logout (optional)
-   */
-  logout(req, res) {
-    try {
-      res.clearCookie('token');
-      return res.status(200).json({ message: 'Logged out successfully' });
-    } catch (error) {
-      return res.status(500).json({ message: 'Logout failed' });
-    }
-  }
-}
-
-module.exports = new AuthController();
+module.exports = AuthController;

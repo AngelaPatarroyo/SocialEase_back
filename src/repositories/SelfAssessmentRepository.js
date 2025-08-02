@@ -2,7 +2,8 @@ const SelfAssessment = require('../models/SelfAssessment');
 
 class SelfAssessmentRepository {
   async create(data, session = null) {
-    return await SelfAssessment.create([data], session ? { session } : {});
+    const result = await SelfAssessment.create([data], session ? { session } : {});
+    return result[0]; // Return the created document, not the array
   }
 
   async findByUserId(userId) {

@@ -14,7 +14,6 @@ app.use(helmet());
 
 // CORS Setup
 const allowedOrigins = ['http://localhost:3000', process.env.FRONTEND_URL];
-
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -47,7 +46,7 @@ app.use('/api/auth/login', rateLimit({
   message: 'Too many login attempts, please try again later.',
 }));
 
-// Swagger Documentation
+// Swagger Docs
 const { swaggerUi, swaggerSpec } = require('./src/config/swagger');
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -60,7 +59,7 @@ const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const selfAssessmentRoutes = require('./src/routes/selfAssessmentRoutes');
 const uploadRoutes = require('./src/routes/uploadRoutes');
-const cloudinaryRoutes = require('./src/routes/cloudinaryRoutes');
+const cloudinaryRoutes = require('./src/routes/cloudinaryRoutes'); // ✅ Only declared once
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -71,7 +70,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/cloudinary', cloudinaryRoutes); // ✅ This must come before 404
+app.use('/api/cloudinary', cloudinaryRoutes); // ✅ cloudinary signature route
 
 // Test Route
 app.get('/test', (req, res) => res.send('API is working ✅'));
