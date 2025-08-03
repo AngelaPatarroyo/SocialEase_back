@@ -58,8 +58,7 @@ const progressRoutes = require('./src/routes/progressRoutes');
 const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const selfAssessmentRoutes = require('./src/routes/selfAssessmentRoutes');
-const uploadRoutes = require('./src/routes/uploadRoutes');
-const cloudinaryRoutes = require('./src/routes/cloudinaryRoutes'); // ✅ Only declared once
+const cloudinaryRoutes = require('./src/routes/cloudinaryRoutes');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
@@ -69,8 +68,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/cloudinary', cloudinaryRoutes); // ✅ cloudinary signature route
+app.use('/api/cloudinary', cloudinaryRoutes); 
 
 // Test Route
 app.get('/test', (req, res) => res.send('API is working ✅'));
