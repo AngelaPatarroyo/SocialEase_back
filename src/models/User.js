@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); // ← Add this if not already imported
 
 const goalSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -14,8 +13,8 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
 
-  //  Secure password
-  password: { type: String, default: null, select: false }, // Add select: false
+  // Secure password
+  password: { type: String, default: null, select: false },
 
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
 
@@ -33,12 +32,5 @@ const userSchema = new mongoose.Schema({
   // Goals
   goals: { type: [goalSchema], default: [] }
 }, { timestamps: true });
-
-//  Hash password before save
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password') || typeof this.password !== 'string') return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
 
 module.exports = mongoose.model('User', userSchema);

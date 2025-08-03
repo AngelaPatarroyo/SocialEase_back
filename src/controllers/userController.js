@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const UserController = {
@@ -11,7 +12,6 @@ const UserController = {
 
       res.status(200).json({ success: true, data: user });
     } catch (error) {
-      console.error('❌ Error fetching profile:', error.message);
       next(error);
     }
   },
@@ -19,7 +19,6 @@ const UserController = {
   async updateProfile(req, res, next) {
     try {
       const { name, avatar, theme } = req.body;
-
       const user = await User.findById(req.user.id);
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
@@ -31,9 +30,12 @@ const UserController = {
 
       await user.save();
 
-      res.status(200).json({ success: true, message: 'Profile updated successfully', data: user });
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: user,
+      });
     } catch (error) {
-      console.error('❌ Error updating profile:', error.message);
       next(error);
     }
   },
@@ -41,34 +43,57 @@ const UserController = {
   async updatePassword(req, res, next) {
     try {
       const { currentPassword, newPassword } = req.body;
+      const user = await User.findById(req.user.id).select('+password');
 
-      if (!req.user?.id) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
-      }
-
-      const user = await User.findById(req.user.id);
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      if (!user.password) {
-        return res.status(400).json({ success: false, message: 'This account uses Google login and has no password set.' });
+      const isGoogleUserWithoutPassword = user.provider === 'google' && !user.password;
+
+      if (isGoogleUserWithoutPassword) {
+        // First time password setup
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+      } else {
+        // Standard password update
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+          return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+
+        const isSame = await bcrypt.compare(newPassword, user.password);
+        if (isSame) {
+          return res.status(400).json({ success: false, message: 'New password must be different' });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
       }
 
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: 'Current password is incorrect' });
-      }
+      // Refresh token
+      const token = jwt.sign(
+        { id: user._id.toString(), role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
 
-      const isSamePassword = await bcrypt.compare(newPassword, user.password);
-      if (isSamePassword) {
-        return res.status(400).json({ success: false, message: 'New password must be different from current password' });
-      }
+      const userData = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        theme: user.theme,
+        role: user.role,
+        provider: user.provider,
+      };
 
-      user.password = await bcrypt.hash(newPassword, 10);
-      await user.save();
-
-      return res.status(200).json({ success: true, message: 'Password updated successfully' });
+      res.status(200).json({
+        success: true,
+        message: 'Password updated successfully',
+        token,
+        user: userData,
+      });
     } catch (error) {
       console.error('❌ Error updating password:', error.message);
       next(error);
@@ -81,29 +106,27 @@ const UserController = {
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
-  
+
       const stats = {
         xp: user.xp,
         level: user.level,
         streak: user.streak,
         badges: user.badges,
-        nextLevelXP: user.level * 100, // example logic
+        nextLevelXP: user.level * 100,
       };
-  
+
       res.status(200).json({
         success: true,
         data: {
           user,
           stats,
-          goals: user.goals || []
-        }
+          goals: user.goals || [],
+        },
       });
     } catch (error) {
-      console.error('❌ Error in getDashboard:', error.message);
       res.status(500).json({ success: false, message: 'Dashboard error' });
     }
-  }
+  },
 };
-  
 
 module.exports = UserController;
