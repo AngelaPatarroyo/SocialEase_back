@@ -4,8 +4,6 @@ const { authMiddleware } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 const { body } = require('express-validator');
 
-
-
 const router = express.Router();
 
 /**
@@ -15,7 +13,109 @@ const router = express.Router();
  *   description: User profile management
  */
 
-// ✅ Validation for updating profile
+/**
+ * @swagger
+ * /api/user/profile:
+ *   get:
+ *     summary: Get the current user's profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved profile
+ *       401:
+ *         description: Unauthorized
+ */
+
+/**
+ * @swagger
+ * /api/user/profile:
+ *   put:
+ *     summary: Update the current user's profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *               theme:
+ *                 type: string
+ *                 enum: [light, dark]
+ *     responses:
+ *       200:
+ *         description: Successfully updated profile
+ *       400:
+ *         description: Validation error
+ */
+
+/**
+ * @swagger
+ * /api/user/password:
+ *   put:
+ *     summary: Update the current user's password
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *       400:
+ *         description: Validation or update error
+ */
+
+/**
+ * @swagger
+ * /api/user/dashboard:
+ *   get:
+ *     summary: Get user's dashboard data
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved dashboard
+ *       401:
+ *         description: Unauthorized
+ */
+
+/**
+ * @swagger
+ * /api/user/delete:
+ *   delete:
+ *     summary: Delete user account and all associated data
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User and related data deleted
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+// 🔒 Middleware validations
 const updateProfileValidation = [
   body('name')
     .optional()
@@ -33,7 +133,6 @@ const updateProfileValidation = [
     .withMessage('Theme must be either light or dark'),
 ];
 
-// ✅ Validation for updating password
 const updatePasswordValidation = [
   body('currentPassword').notEmpty().withMessage('Current password is required'),
   body('newPassword')
@@ -41,7 +140,7 @@ const updatePasswordValidation = [
     .withMessage('New password must be at least 6 characters long'),
 ];
 
-// ✅ Routes
+//  Routes
 router.get('/profile', authMiddleware, UserController.getProfile);
 
 router.put(
@@ -60,6 +159,13 @@ router.put(
   updatePasswordValidation,
   validateRequest,
   UserController.updatePassword
+);
+
+//  Delete account
+router.delete(
+  '/delete',
+  authMiddleware,
+  UserController.deleteAccount
 );
 
 module.exports = router;

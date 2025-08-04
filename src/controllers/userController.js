@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const SelfAssessment = require('../models/SelfAssessment');
+const Scenario = require('../models/Scenario');
+const Feedback = require('../models/Feedback');
 
 const UserController = {
   async getProfile(req, res, next) {
@@ -127,6 +130,31 @@ const UserController = {
       res.status(500).json({ success: false, message: 'Dashboard error' });
     }
   },
+
+  async deleteAccount(req, res) {
+    try {
+      const userId = req.user.id;
+
+      await Promise.all([
+        SelfAssessment.deleteMany({ userId }),
+        Scenario.deleteMany({ userId }),
+        Feedback.deleteMany({ userId }),
+      ]);
+
+      await User.findByIdAndDelete(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'User and all related data deleted',
+      });
+    } catch (error) {
+      console.error('❌ Error deleting account:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete account. Please try again.',
+      });
+    }
+  }
 };
 
 module.exports = UserController;
