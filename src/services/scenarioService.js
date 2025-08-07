@@ -1,172 +1,95 @@
-const mongoose = require('mongoose');
-const ScenarioRepository = require('../repositories/ScenarioRepository');
-const FeedbackRepository = require('../repositories/FeedbackRepository');
-const { updateUserGamification } = require('./gamificationService');
-const ProgressService = require('./progressService');
-const GoalService = require('./goalService');
-const xpRewards = require('../config/xpRewards');
-const AppError = require('../utils/errors');
+const Scenario = require('../models/Scenario');
+const Progress = require('../models/Progress');
+const ScenarioPreparation = require('../models/ScenarioPreparation');
 
 class ScenarioService {
   /** ------------------------
-   *    BASIC CRUD
+   *   GET ALL SCENARIOS
    * ------------------------ */
   async getAllScenarios() {
-    return await ScenarioRepository.findAll();
+    return Scenario.find().sort({ createdAt: -1 });
   }
 
+  /** ------------------------
+   *   GET SCENARIO BY ID
+   * ------------------------ */
   async getScenarioById(id) {
-    this.validateObjectId(id, 'Scenario');
-    const scenario = await ScenarioRepository.findById(id);
-    if (!scenario) throw new AppError('Scenario not found', 404);
-    return scenario;
+    return Scenario.findById(id);
   }
 
+  /** ------------------------
+   *   CREATE SCENARIO
+   * ------------------------ */
   async createScenario(data) {
-    this.validateScenarioData(data);
-    return await ScenarioRepository.create(data);
+    return Scenario.create(data);
   }
 
+  /** ------------------------
+   *   UPDATE SCENARIO
+   * ------------------------ */
   async updateScenario(id, data) {
-    this.validateObjectId(id, 'Scenario');
-    this.validateScenarioData(data, false);
-    const scenario = await ScenarioRepository.update(id, data);
-    if (!scenario) throw new AppError('Scenario not found', 404);
-    return scenario;
+    return Scenario.findByIdAndUpdate(id, data, { new: true });
   }
 
+  /** ------------------------
+   *   DELETE SCENARIO
+   * ------------------------ */
   async deleteScenario(id) {
-    this.validateObjectId(id, 'Scenario');
-    const scenario = await ScenarioRepository.delete(id);
-    if (!scenario) throw new AppError('Scenario not found', 404);
-    return scenario;
+    return Scenario.findByIdAndDelete(id);
   }
 
   /** ------------------------
    *   COMPLETE SCENARIO
    * ------------------------ */
   async completeScenario(userId, scenarioId) {
-    this.validateObjectId(scenarioId, 'Scenario');
+    const existing = await Progress.findOne({ user: userId, scenario: scenarioId });
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      const scenario = await ScenarioRepository.findById(scenarioId);
-      if (!scenario) throw new AppError('Scenario not found', 404);
-
-      const xpEarned = scenario.points || xpRewards.scenarioCompletion;
-
-      // Update XP & Progress
-      await updateUserGamification(userId, xpEarned, session);
-      await ProgressService.updateProgress(userId, scenarioId, session);
-
-      // Update user goals
-      await GoalService.updateGoalsOnScenarioCompletion(userId);
-
-      await session.commitTransaction();
-      session.endSession();
-
-      return `Scenario completed! You earned ${xpEarned} XP and your progress has been updated.`;
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      throw new AppError(error.message, 500);
+    if (existing) {
+      return 'Scenario already completed previously';
     }
+
+    await Progress.create({ user: userId, scenario: scenarioId, completed: true });
+    return 'Scenario marked as completed';
   }
 
   /** ------------------------
-   *   ADAPTIVE DIFFICULTY (FR4)
+   *   GET ADAPTIVE SCENARIO
    * ------------------------ */
   async getAdaptiveScenario(userId) {
-    const feedbacks = await FeedbackRepository.findRecentByUser(userId, 3);
-    const ratings = feedbacks.map(f => f.rating);
-
-    let currentDifficulty = 'easy';
-    if (feedbacks.length > 0 && feedbacks[0].scenarioDifficulty) {
-      currentDifficulty = feedbacks[0].scenarioDifficulty;
-    }
-
-    const nextDifficulty = this.calculateNextDifficulty(ratings, currentDifficulty);
-    const scenarios = await ScenarioRepository.findByDifficulty(nextDifficulty);
-
-    if (!scenarios || scenarios.length === 0) {
-      throw new AppError(`No scenarios found for difficulty: ${nextDifficulty}`, 404);
-    }
-
-    return scenarios[Math.floor(Math.random() * scenarios.length)];
-  }
-
-  calculateNextDifficulty(ratings, currentDifficulty) {
-    if (ratings.length === 0) return currentDifficulty;
-
-    const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-    const levels = ['easy', 'medium', 'hard'];
-    let index = levels.indexOf(currentDifficulty);
-
-    if (avgRating >= 4 && index < levels.length - 1) return levels[index + 1];
-    if (avgRating <= 2 && index > 0) return levels[index - 1];
-    return currentDifficulty;
+    const completedIds = await Progress.find({ user: userId }).distinct('scenario');
+    const next = await Scenario.findOne({ _id: { $nin: completedIds } }).sort({ createdAt: 1 });
+    return next;
   }
 
   /** ------------------------
-   *   REPLAY SCENARIO (DR2)
+   *   REPLAY SCENARIO
    * ------------------------ */
   async replayScenario(userId, scenarioId) {
-    this.validateObjectId(scenarioId, 'Scenario');
-    const scenario = await ScenarioRepository.findById(scenarioId);
-    if (!scenario) throw new AppError('Scenario not found', 404);
-
-    const xpEarned = Math.floor((scenario.points || xpRewards.scenarioCompletion) / 2);
-    await updateUserGamification(userId, xpEarned);
-    await GoalService.updateGoalsOnScenarioCompletion(userId);
-
-    return `Scenario replayed! You earned ${xpEarned} XP for practice.`;
+    return `User ${userId} is replaying scenario ${scenarioId}`;
   }
 
   /** ------------------------
-   *   SKIP SCENARIO (DR2)
+   *   SKIP SCENARIO
    * ------------------------ */
   async skipScenario(currentId, difficulty) {
-    if (!difficulty) throw new AppError('Difficulty is required to skip scenario', 400);
-
-    const scenarios = await ScenarioRepository.findByDifficulty(difficulty);
-    const filtered = scenarios.filter(s => s._id.toString() !== currentId);
-
-    if (filtered.length === 0) throw new AppError('No alternative scenarios found', 404);
-
-    return filtered[Math.floor(Math.random() * filtered.length)];
+    return Scenario.findOne({
+      _id: { $ne: currentId },
+      difficulty: difficulty
+    }).sort({ createdAt: -1 });
   }
 
   /** ------------------------
-   *   VR SCENARIOS (Luxury Feature)
+   *   GET VR SCENARIOS
    * ------------------------ */
   async getVRScenarios() {
-    const vrScenarios = await ScenarioRepository.findVRScenarios();
-    if (!vrScenarios || vrScenarios.length === 0) {
-      throw new AppError('No VR scenarios available', 404);
-    }
-    return vrScenarios;
+    return Scenario.find({ vrSupported: true });
   }
 
   /** ------------------------
-   *   VALIDATION HELPERS
+   *   SAVE SCENARIO PREPARATION
    * ------------------------ */
-  validateObjectId(id, resourceName) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new AppError(`${resourceName} ID is invalid`, 400);
-    }
-  }
-
-  validateScenarioData(data, isCreate = true) {
-    const { title, description, difficulty, points } = data;
-    if (isCreate) {
-      if (!title || !description || !difficulty) {
-        throw new AppError('Title, description, and difficulty are required', 400);
-      }
-    }
-    if (points && typeof points !== 'number') {
-      throw new AppError('Points must be a number', 400);
-    }
+  async savePreparationData(data) {
+    return ScenarioPreparation.create(data);
   }
 }
 
