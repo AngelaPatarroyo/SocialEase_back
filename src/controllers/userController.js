@@ -4,6 +4,10 @@ const User = require('../models/User');
 const SelfAssessment = require('../models/SelfAssessment');
 const Scenario = require('../models/Scenario');
 const Feedback = require('../models/Feedback');
+const { levelMeta, buildLinear } = require('../utils/leveling');
+const badgeManager = require('../utils/badgeManager');
+
+const thresholdFn = buildLinear(100);
 
 const UserController = {
   async getProfile(req, res, next) {
@@ -12,7 +16,6 @@ const UserController = {
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
-
       res.status(200).json({ success: true, data: user });
     } catch (error) {
       next(error);
@@ -55,11 +58,9 @@ const UserController = {
       const isGoogleUserWithoutPassword = user.provider === 'google' && !user.password;
 
       if (isGoogleUserWithoutPassword) {
-        // First time password setup
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
       } else {
-        // Standard password update
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
           return res.status(401).json({ success: false, message: 'Current password is incorrect' });
@@ -74,7 +75,6 @@ const UserController = {
         await user.save();
       }
 
-      // Refresh token
       const token = jwt.sign(
         { id: user._id.toString(), role: user.role },
         process.env.JWT_SECRET,
@@ -110,12 +110,23 @@ const UserController = {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
+      // Recalculate level/XP from total XP
+      const meta = levelMeta(Number(user.xp || 0), thresholdFn);
+      user.level = meta.level;
+
+      // Auto-award badges if missing
+      const autoAwarded = badgeManager.checkAchievements(user) || [];
+      user.badges = Array.from(new Set([...(user.badges || []), ...autoAwarded]));
+      await user.save();
+
       const stats = {
-        xp: user.xp,
-        level: user.level,
-        streak: user.streak,
+        xp: Number(user.xp || 0),
+        level: meta.level,
+        streak: Number(user.streak || 0),
         badges: user.badges,
-        nextLevelXP: user.level * 100,
+        nextLevelXP: meta.xpForNextLevel,
+        xpIntoLevel: meta.xpIntoLevel,
+        xpRemaining: meta.xpRemaining,
       };
 
       res.status(200).json({
@@ -127,6 +138,7 @@ const UserController = {
         },
       });
     } catch (error) {
+      console.error('❌ Dashboard error:', error);
       res.status(500).json({ success: false, message: 'Dashboard error' });
     }
   },

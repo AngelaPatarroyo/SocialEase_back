@@ -1,18 +1,13 @@
-// utils/calculateSocialLevel.js
 
-module.exports = function calculateSocialLevel({ communicationConfidence, socialFrequency, anxietyTriggers = [] }) {
-  let score = 0;
+module.exports = function calculateSocialLevel({ communicationConfidence, socialFrequency, anxietyTriggers }) {
 
-  if (communicationConfidence < 4) score += 2;
-  else if (communicationConfidence < 7) score += 1;
+  const conf = Number(communicationConfidence || 0);
+  const freqScore = { rarely: 0, sometimes: 1, often: 2, daily: 3 }[socialFrequency] ?? 0;
+  const anxietyPenalty = Array.isArray(anxietyTriggers) ? Math.min(anxietyTriggers.length, 3) : 0;
 
-  if (socialFrequency === 'rarely') score += 2;
-  else if (socialFrequency === 'monthly') score += 1;
-
-  if (anxietyTriggers.length > 1) score += 2;
-  else if (anxietyTriggers.length === 1) score += 1;
-
-  if (score >= 5) return 3;      // high
-  if (score >= 3) return 2;      // medium
-  return 1;                      // low
+  const score = conf + freqScore * 2 - anxietyPenalty;
+  if (score <= 3) return 'beginner';
+  if (score <= 8) return 'developing';
+  if (score <= 12) return 'confident';
+  return 'advanced';
 };
