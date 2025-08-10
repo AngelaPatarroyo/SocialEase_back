@@ -1,45 +1,42 @@
+// src/services/progressService.js
 const ProgressRepository = require('../repositories/ProgressRepository');
 const UserRepository = require('../repositories/UserRepository');
 const ScenarioRepository = require('../repositories/ScenarioRepository');
+const { resolveScenarioObjectId } = require('../utils/resolveScenarioId');
 const AppError = require('../utils/errors');
 
 class ProgressService {
   /**
-   * Update progress when a user completes a scenario
-   * - Tracks completed scenarios atomically
-   * - Adds achievements based on milestones
+   * Marks scenario complete (slug or ObjectId) and handles achievements.
+   * XP is awarded in FeedbackController.submit, not here.
    */
-  async updateProgress(userId, scenarioId) {
-    // Validate user and scenario existence
-    const user = await UserRepository.findById(userId);
-    const scenario = await ScenarioRepository.findById(scenarioId);
+  async updateProgress(userId, scenarioIdOrSlug) {
+    try {
+      const scenarioId = await resolveScenarioObjectId(scenarioIdOrSlug);
 
-    if (!user || !scenario) {
-      throw new AppError('User or Scenario not found', 404);
+      const [user, scenario] = await Promise.all([
+        UserRepository.findById(userId),
+        ScenarioRepository.findById(scenarioId),
+      ]);
+      if (!user) throw new AppError('User not found', 404);
+      if (!scenario) throw new AppError('Scenario not found', 404);
+
+      const updatedProgress = await ProgressRepository.addScenario(userId, scenarioId);
+
+      // achievements based on unique completions
+      const total = updatedProgress.completedScenarios.length;
+      if (total === 1) await ProgressRepository.addAchievement(userId, 'Getting Started');
+      if (total === 5) await ProgressRepository.addAchievement(userId, 'Consistent Learner');
+
+      return updatedProgress;
+    } catch (err) {
+      console.error('[ProgressService.updateProgress] Error:', err);
+      throw new AppError(err?.message || 'Could not update progress', err?.statusCode || 500);
     }
-
-    // Atomically add scenario to completed list
-    const updatedProgress = await ProgressRepository.addScenario(userId, scenarioId);
-
-    // Determine scenario count after atomic update
-    const totalScenarios = updatedProgress.completedScenarios.length;
-
-    // Add achievements based on milestones
-    if (totalScenarios === 1) {
-      await ProgressRepository.addAchievement(userId, 'Getting Started');
-    }
-    if (totalScenarios === 5) {
-      await ProgressRepository.addAchievement(userId, 'Consistent Learner');
-    }
-
-    return updatedProgress;
   }
 
-  /**
-   * Get user's progress record
-   */
   async getProgress(userId) {
-    return await ProgressRepository.findByUserId(userId);
+    return ProgressRepository.findByUserId(userId);
   }
 }
 

@@ -1,44 +1,34 @@
+// src/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
+const AppError = require('../utils/errors');
 
-/**
- * Middleware to authenticate requests using JWT
- */
-function authMiddleware(req, res, next) {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    console.log('🔒 No token provided');
-    return res.status(401).json({ error: 'Access denied. No token provided.' });
-  }
-
+exports.authMiddleware = (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded.id) {
-      console.log('⚠️ Invalid token payload:', decoded);
-      return res.status(401).json({ error: 'Invalid token payload' });
+    const header = req.headers.authorization || '';
+    if (!header.startsWith('Bearer ')) {
+      return next(new AppError('Missing or invalid Authorization header', 401));
     }
 
-    console.log('✅ JWT verified:', decoded);
-    req.user = decoded; // { id, role }
+    const token = header.split(' ')[1];
+    if (!token) {
+      return next(new AppError('Token not provided', 401));
+    }
+
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return next(new AppError('Invalid or expired token', 401));
+    }
+
+    // attach user (normalize shape your controllers expect)
+    req.user = { id: payload.id || payload.userId || payload.sub };
+    if (!req.user.id) {
+      return next(new AppError('Token payload missing user id', 403));
+    }
+
     next();
   } catch (err) {
-    console.log('❌ Token verification failed:', err.message);
-    return res.status(401).json({ error: 'Invalid token' });
+    next(new AppError('Authentication error', 401));
   }
-}
-
-/**
- * Middleware to restrict access to admin users only
- */
-function adminMiddleware(req, res, next) {
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-}
-
-module.exports = {
-  authMiddleware,
-  adminMiddleware
 };

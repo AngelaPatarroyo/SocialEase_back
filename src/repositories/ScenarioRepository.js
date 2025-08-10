@@ -1,37 +1,56 @@
+const mongoose = require('mongoose');
 const Scenario = require('../models/Scenario');
 
 class ScenarioRepository {
   async create(data) {
-    return await Scenario.create(data);
+    return Scenario.create(data);
   }
 
   async findAll() {
-    return await Scenario.find().sort({ createdAt: -1 });
+    return Scenario.find().sort({ createdAt: -1 });
   }
 
   async findById(id) {
-    return await Scenario.findById(id);
+    return Scenario.findById(id);
   }
 
   async update(id, data) {
-    return await Scenario.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    return Scenario.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   }
 
   async delete(id) {
-    return await Scenario.findByIdAndDelete(id);
+    return Scenario.findByIdAndDelete(id);
   }
 
   async count() {
-    return await Scenario.countDocuments();
+    return Scenario.countDocuments();
   }
 
   async findByDifficulty(difficulty) {
-    return await Scenario.find({ difficulty: difficulty });
+    return Scenario.find({ difficulty });
   }
 
-  //  Fetch all VR-supported scenarios
+  // Fetch all VR-supported scenarios
   async findVRScenarios() {
-    return await Scenario.find({ vrSupported: true });
+    return Scenario.find({ vrSupported: true });
+  }
+
+  // NEW: find by slug
+  async findBySlug(slug) {
+    return Scenario.findOne({ slug });
+  }
+
+  // Optional helper: find by Mongo _id or slug transparently
+  async findBySlugOrId(identifier) {
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      return this.findById(identifier);
+    }
+    return this.findBySlug(identifier);
+  }
+
+  // Optional: quick existence check by slug
+  async existsBySlug(slug) {
+    return Scenario.exists({ slug });
   }
 }
 

@@ -1,4 +1,3 @@
-// services/SelfAssessmentService.js
 const mongoose = require('mongoose');
 const SelfAssessmentRepository = require('../repositories/SelfAssessmentRepository');
 const { updateUserGamification } = require('./gamificationService');
@@ -9,15 +8,37 @@ const User = require('../models/User');
 
 const FIRST_BADGE_KEY = 'first_self_assessment';
 
+function coerceCommConfidence(v, fallbackFromAfter) {
+  if (v === '' || v == null) return undefined;
+  const n = Number(v);
+  if (Number.isFinite(n)) return Math.max(0, Math.min(10, n));
+  const s = String(v).toLowerCase().trim();
+  if (['very low', 'very_low', 'vlow'].includes(s)) return 2;
+  if (['low'].includes(s)) return 3;
+  if (['med', 'medium', 'avg', 'average'].includes(s)) return 5;
+  if (['high'].includes(s)) return 8;
+  if (['very high', 'very_high', 'vhigh'].includes(s)) return 9;
+  // fallback from confidenceAfter (0..100 -> 0..10)
+  if (Number.isFinite(fallbackFromAfter)) return Math.round(Math.max(0, Math.min(100, fallbackFromAfter)) / 10);
+  return 5;
+}
+
 class SelfAssessmentService {
   async createAssessment(userId, data) {
     this.validateAssessmentData(data);
+
+    // Defensive coercion so it always matches the model schema
+    if (data) {
+      data.communicationConfidence = coerceCommConfidence(
+        data.communicationConfidence,
+        data.confidenceAfter
+      );
+    }
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-      // Count BEFORE create inside the same session
       const countBefore = await SelfAssessmentRepository.countByUserId(userId, { session });
 
       const socialLevel = calculateSocialLevel({

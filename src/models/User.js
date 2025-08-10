@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 
 const goalSchema = new mongoose.Schema({
@@ -24,6 +23,11 @@ const userSchema = new mongoose.Schema({
   badges: { type: [String], default: [] },
   streak: { type: Number, default: 0 },
   lastCompletedDate: { type: Date },
+
+  hasCompletedSelfAssessment: { type: Boolean, default: false },
+  selfAssessmentCompletedAt: { type: Date },
+  selfAssessmentUpdatedAt: { type: Date },
+  lastSelfAssessmentXpAt: { type: Date },
 
   goals: { type: [goalSchema], default: [] }
 }, { timestamps: true });

@@ -4,18 +4,23 @@ const AppError = require('../utils/errors');
 class ProgressController {
   async updateProgress(req, res, next) {
     try {
-      const userId = req.user.id; // from auth middleware
-      const { scenarioId } = req.body;
+      if (!req.user || !req.user.id) {
+        return next(new AppError('Unauthorized', 401));
+      }
+      const userId = req.user.id;
+      const { scenarioId } = req.body; // may be slug or ObjectId
+
+      if (!scenarioId) return next(new AppError('scenarioId is required', 400));
 
       const progress = await ProgressService.updateProgress(userId, scenarioId);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Progress updated successfully',
-        data: progress
+        data: progress,
       });
     } catch (err) {
-      next(new AppError(err.message, 400));
+      next(new AppError(err.message || 'Failed to update progress', err.statusCode || 500));
     }
   }
 
@@ -28,12 +33,12 @@ class ProgressController {
         return next(new AppError('Progress not found', 404));
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
-        data: progress
+        data: progress,
       });
     } catch (err) {
-      next(new AppError(err.message, 500));
+      next(new AppError(err.message || 'Failed to fetch progress', 500));
     }
   }
 }

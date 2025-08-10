@@ -145,43 +145,38 @@ class ScenarioController {
   /** ------------------------
    *   SAVE SCENARIO PREPARATION DATA (NEW)
    * ------------------------ */
+  // ScenarioController.savePreparation
   async savePreparation(req, res, next) {
     try {
-      const { scenarioId, fear, anxiety, support, visualization, goal } = req.body;
-      const userId = req.user.id;
+      const {
+        scenarioId,
+        // old/new shapes
+        mood, intention,
+        fear, anxiety, support, visualization, goal
+      } = req.body;
 
+      const userId = req.user.id;
       if (!scenarioId || !userId) {
-        return res.status(400).json({
-          success: false,
-          message: 'Missing required scenarioId or userId',
-        });
+        return res.status(400).json({ success: false, message: 'Missing required scenarioId or userId' });
       }
 
       const data = {
-        user: userId,              
-        scenario: scenarioId,      
-        fear,
-        anxiety,
-        support,
-        visualization,
-        goal,
+        user: userId,
+        scenario: scenarioId,
+        // prefer explicit fields, fallback to mood/intention
+        anxiety: anxiety ?? mood ?? null,
+        goal: goal ?? intention ?? '',
+        fear: fear ?? '',
+        support: support ?? '',
+        visualization: visualization ?? '',
       };
 
       const saved = await ScenarioService.savePreparationData(data);
-      res.status(201).json({
-        success: true,
-        message: 'Preparation saved',
-        data: saved
-      });
+      return res.status(201).json({ success: true, message: 'Preparation saved', data: saved });
     } catch (err) {
       console.error('❌ Error in savePreparation:', err.message);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to save preparation data',
-        error: err.message
-      });
+      return res.status(500).json({ success: false, message: 'Failed to save preparation data', error: err.message });
     }
   }
 }
-
 module.exports = new ScenarioController();
