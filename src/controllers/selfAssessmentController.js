@@ -3,6 +3,15 @@ const AppError = require('../utils/errors');
 const User = require('../models/User');
 
 class SelfAssessmentController {
+  constructor() {
+    // bind methods so Express can use them directly
+    this.create = this.create.bind(this);
+    this.update = this.update.bind(this);
+    this.getUserAssessment = this.getUserAssessment.bind(this);
+    this.getCurrentUserAssessment = this.getCurrentUserAssessment.bind(this);
+  }
+
+  // POST /api/self-assessment
   async create(req, res, next) {
     try {
       const userId = req.user?.id;
@@ -11,11 +20,21 @@ class SelfAssessmentController {
       const user = await User.findById(userId);
       if (!user) return next(new AppError('User not found', 404));
 
-      // If already completed, treat as update without touching the frontend
+      // If already completed, run update flow directly (don’t rely on this.update here)
       if (user.hasCompletedSelfAssessment) {
-        return this.update(req, res, next);
+        const result = await SelfAssessmentService.updateAssessment(userId, req.body);
+        user.selfAssessmentUpdatedAt = new Date();
+        await user.save();
+
+        return res.status(200).json({
+          success: true,
+          message: result.message,
+          data: result.data,
+          meta: result.meta,
+        });
       }
 
+      // Initial create
       const result = await SelfAssessmentService.createAssessment(userId, req.body);
 
       user.hasCompletedSelfAssessment = true;
@@ -26,7 +45,7 @@ class SelfAssessmentController {
         success: true,
         message: result.message,
         data: result.data,
-        meta: result.meta, // { xp, level }
+        meta: result.meta,
       });
     } catch (err) {
       console.error('❌ Error in create self-assessment:', err);
@@ -34,6 +53,7 @@ class SelfAssessmentController {
     }
   }
 
+  // PUT /api/self-assessment
   async update(req, res, next) {
     try {
       const userId = req.user?.id;
@@ -62,6 +82,7 @@ class SelfAssessmentController {
     }
   }
 
+  // GET /api/self-assessment/:userId (admin)
   async getUserAssessment(req, res, next) {
     try {
       const { userId } = req.params;
@@ -76,6 +97,7 @@ class SelfAssessmentController {
     }
   }
 
+  // GET /api/self-assessment (current user)
   async getCurrentUserAssessment(req, res, next) {
     try {
       const userId = req.user?.id;
