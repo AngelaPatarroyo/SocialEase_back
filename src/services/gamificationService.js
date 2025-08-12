@@ -50,7 +50,15 @@ async function updateUserGamification(userId, xpEarned = 0, session = null) {
 
   // Badges
   const newBadges = badgeManager.checkAchievements(user) || [];
-  user.badges = Array.from(new Set([...(user.badges || []), ...newBadges]));
+  
+  // Clean up any old badges first
+  const { oldBadges, cleanedBadges } = badgeManager.cleanOldBadges(user);
+  if (oldBadges.length > 0) {
+    console.log(`[GamificationService] 🧹 Cleaned old badges for user ${user._id}: ${oldBadges.join(', ')}`);
+  }
+  
+  // Combine cleaned badges with new badges
+  user.badges = Array.from(new Set([...cleanedBadges, ...newBadges]));
 
   await user.save(session ? { session } : undefined);
 

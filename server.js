@@ -9,7 +9,6 @@ require('dotenv').config();
 
 const app = express();
 
-
 app.use(helmet());
 
 const allowedOrigins = ['http://localhost:3000', process.env.FRONTEND_URL];
@@ -26,10 +25,8 @@ app.use(cors({
 
 app.use(express.json());
 
-// Logging
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 
-// Rate limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -43,11 +40,8 @@ app.use('/api/auth/login', rateLimit({
   message: 'Too many login attempts, please try again later.',
 }));
 
-
-
 const { swaggerUi, swaggerSpec } = require('./src/config/swagger');
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
 
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes'); 
@@ -57,8 +51,8 @@ const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const selfAssessmentRoutes = require('./src/routes/selfAssessmentRoutes');
 const cloudinaryRoutes = require('./src/routes/cloudinaryRoutes');
+const goalRoutes = require('./src/routes/goalRoutes');       // <-- ADD THIS
 
-// Route Mounting
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/scenarios', scenarioRoutes);
@@ -67,8 +61,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
-
-
+app.use('/api/goals', goalRoutes);                           
 
 app.get('/test', (req, res) => res.send('API is working ✅'));
 
@@ -78,7 +71,6 @@ app.use((req, res) => {
 
 const errorHandler = require('./src/middleware/errorHandler');
 app.use(errorHandler);
-
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected'))

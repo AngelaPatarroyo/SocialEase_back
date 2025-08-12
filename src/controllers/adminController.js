@@ -37,6 +37,32 @@ class AdminController {
       next(err);
     }
   }
+
+  async cleanupBadges(req, res, next) {
+    try {
+      const result = await AdminService.cleanupBadges();
+      res.status(200).json({
+        success: true,
+        message: 'Badge cleanup completed successfully',
+        data: result
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async cleanupUserBadges(req, res, next) {
+    try {
+      const result = await AdminService.cleanupUserBadges(req.params.userId);
+      res.status(200).json({
+        success: true,
+        message: 'User badges cleaned successfully',
+        data: result
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new AdminController();

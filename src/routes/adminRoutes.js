@@ -104,6 +104,56 @@ router.delete('/users/:id',
 
 /**
  * @swagger
+ * /api/admin/badges/cleanup:
+ *   post:
+ *     summary: Clean up old badges from all users (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Badge cleanup completed successfully
+ *       500:
+ *         description: Server error during cleanup
+ */
+router.post('/badges/cleanup',
+  authMiddleware,
+  isAdmin,
+  (req, res) => AdminController.cleanupBadges(req, res)
+);
+
+/**
+ * @swagger
+ * /api/admin/badges/cleanup/{userId}:
+ *   post:
+ *     summary: Force clean badges for a specific user (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User badges cleaned successfully
+ *       500:
+ *         description: Server error during cleanup
+ */
+router.post('/badges/cleanup/:userId',
+  authMiddleware,
+  isAdmin,
+  [
+    param('userId').isMongoId().withMessage('Valid userId is required')
+  ],
+  validateRequest,
+  (req, res) => AdminController.cleanupUserBadges(req, res)
+);
+
+/**
+ * @swagger
  * /api/admin/analytics:
  *   get:
  *     summary: Get platform analytics (Admin only)

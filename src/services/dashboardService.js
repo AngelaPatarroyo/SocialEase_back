@@ -1,6 +1,7 @@
 const UserRepository = require('../repositories/UserRepository');
 const ProgressRepository = require('../repositories/ProgressRepository');
 const SelfAssessmentRepository = require('../repositories/SelfAssessmentRepository');
+const badgeManager = require('../utils/badgeManager');
 const AppError = require('../utils/errors');
 
 class DashboardService {
@@ -21,6 +22,16 @@ class DashboardService {
       }
 
       const { xp = 0, level = 1, streak = 0, badges = [] } = user;
+      console.log('DEBUG: User XP/Level data:', { xp, level, streak, badgesCount: badges.length });
+
+      // Check for new badges and award them
+      const newBadges = badgeManager.checkAchievements(user);
+      if (newBadges.length > 0) {
+        console.log(`[DashboardService] 🎖️ New badges awarded: ${newBadges.join(', ')}`);
+        user.badges = Array.from(new Set([...(user.badges || []), ...newBadges]));
+        await user.save();
+        console.log(`[DashboardService] User badges updated: ${user.badges.join(', ')}`);
+      }
 
       // Fetch progress safely
       const progress = await ProgressRepository.findByUserId(userId);
@@ -40,7 +51,7 @@ class DashboardService {
       if (assessments.length > 0) messages.push("Your self-reflection shows steady growth.");
 
       const response = {
-        stats: { xp, level, streak, badges },
+        stats: { xp, level, streak, badges: user.badges || [] },
         progress: {
           completedScenariosCount: completedScenarios.length,
           recentScenarios: completedScenarios.slice(-3) // Show last 3

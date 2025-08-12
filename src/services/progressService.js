@@ -23,11 +23,6 @@ class ProgressService {
 
       const updatedProgress = await ProgressRepository.addScenario(userId, scenarioId);
 
-      // achievements based on unique completions
-      const total = updatedProgress.completedScenarios.length;
-      if (total === 1) await ProgressRepository.addAchievement(userId, 'Getting Started');
-      if (total === 5) await ProgressRepository.addAchievement(userId, 'Consistent Learner');
-
       return updatedProgress;
     } catch (err) {
       console.error('[ProgressService.updateProgress] Error:', err);

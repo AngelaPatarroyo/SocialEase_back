@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
+const User = require('../models/User');
 const SelfAssessmentRepository = require('../repositories/SelfAssessmentRepository');
 const { updateUserGamification } = require('./gamificationService');
 const xpRewards = require('../config/xpRewards');
 const AppError = require('../utils/errors');
 const calculateSocialLevel = require('../utils/calculateSocialLevel');
+const badgeManager = require('../utils/badgeManager');
 
 function toNum(v) { if (v === '' || v == null) return undefined; const n = Number(v); return Number.isFinite(n) ? n : undefined; }
 function toArr(v) { if (Array.isArray(v)) return v.filter(Boolean).map(String); if (v == null || v === '') return []; return [String(v)]; }
@@ -112,6 +114,22 @@ class SelfAssessmentService {
 
       const reward = Number.isFinite(xpRewards?.selfAssessment) ? xpRewards.selfAssessment : 10;
       const { xp, level } = await updateUserGamification(userId, reward, session);
+
+      // Award self-assessment completion badge
+      const user = await User.findById(userId).session(session);
+      if (user) {
+        // Mark user as having completed self-assessment
+        user.hasCompletedSelfAssessment = true;
+        user.selfAssessmentCompletedAt = new Date();
+        
+        const newBadges = badgeManager.checkAchievements(user);
+        if (newBadges.length > 0) {
+          user.badges = Array.from(new Set([...(user.badges || []), ...newBadges]));
+          console.log(`[SelfAssessmentService] Awarded badges: ${newBadges.join(', ')}`);
+        }
+        
+        await user.save({ session });
+      }
 
       await session.commitTransaction();
       return { message: `Self-assessment completed successfully. ${reward} XP added.`, data: assessment, meta: { xp, level } };

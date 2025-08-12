@@ -16,7 +16,26 @@ const UserController = {
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
-      res.status(200).json({ success: true, data: user });
+      
+      // Check if user has a password (for Google users)
+      const userWithPassword = await User.findById(req.user.id).select('password');
+      const hasPassword = !!userWithPassword.password;
+      
+      const profileData = {
+        ...user.toObject(),
+        hasPassword,
+        canSetPassword: true, // All users can set/update passwords
+        requiresCurrentPassword: hasPassword // Only require current password if they have one
+      };
+      
+      console.log(`[ProfileController] User ${user.email} profile data:`, {
+        provider: user.provider,
+        hasPassword,
+        canSetPassword: profileData.canSetPassword,
+        requiresCurrentPassword: profileData.requiresCurrentPassword
+      });
+      
+      res.status(200).json({ success: true, data: profileData });
     } catch (error) {
       next(error);
     }
@@ -46,6 +65,36 @@ const UserController = {
     }
   },
 
+  async getPasswordStatus(req, res, next) {
+    try {
+      const user = await User.findById(req.user.id).select('provider password');
+      
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      const hasPassword = !!user.password;
+      const isGoogleUser = user.provider === 'google';
+      
+      const passwordStatus = {
+        hasPassword,
+        isGoogleUser,
+        canSetPassword: true, // All users can set/update passwords
+        requiresCurrentPassword: hasPassword // Only require current password if they have one
+      };
+      
+      console.log(`[PasswordStatusController] User ${user.email} password status:`, passwordStatus);
+      
+      res.status(200).json({
+        success: true,
+        data: passwordStatus
+      });
+    } catch (error) {
+      console.error('❌ Error getting password status:', error.message);
+      next(error);
+    }
+  },
+
   async updatePassword(req, res, next) {
     try {
       const { currentPassword, newPassword } = req.body;
@@ -55,24 +104,75 @@ const UserController = {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
+      // Validate new password
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'New password must be at least 6 characters long' 
+        });
+      }
+
       const isGoogleUserWithoutPassword = user.provider === 'google' && !user.password;
 
       if (isGoogleUserWithoutPassword) {
+        // Google user setting password for the first time
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
+        
+        console.log(`🔐 Google user ${user.email} set password for the first time`);
+      } else if (user.provider === 'google' && user.password) {
+        // Google user updating existing password
+        if (currentPassword) {
+          const isMatch = await bcrypt.compare(currentPassword, user.password);
+          if (!isMatch) {
+            return res.status(401).json({ 
+              success: false, 
+              message: 'Current password is incorrect' 
+            });
+          }
+        }
+        
+        const isSame = await bcrypt.compare(newPassword, user.password);
+        if (isSame) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'New password must be different from current password' 
+          });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+        
+        console.log(`🔐 Google user ${user.email} updated password`);
       } else {
+        // Local user updating password
+        if (!currentPassword) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Current password is required' 
+          });
+        }
+
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
-          return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Current password is incorrect' 
+          });
         }
 
         const isSame = await bcrypt.compare(newPassword, user.password);
         if (isSame) {
-          return res.status(400).json({ success: false, message: 'New password must be different' });
+          return res.status(400).json({ 
+            success: false, 
+            message: 'New password must be different from current password' 
+          });
         }
 
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
+        
+        console.log(`🔐 Local user ${user.email} updated password`);
       }
 
       const token = jwt.sign(
@@ -89,6 +189,7 @@ const UserController = {
         theme: user.theme,
         role: user.role,
         provider: user.provider,
+        hasPassword: true, // Now they have a password
       };
 
       res.status(200).json({
@@ -165,6 +266,67 @@ const UserController = {
         success: false,
         message: 'Failed to delete account. Please try again.',
       });
+    }
+  },
+
+  async getBadges(req, res) {
+    try {
+      const allBadges = badgeManager.getAllBadges();
+      const user = await User.findById(req.user.id).select('badges xp level streak');
+      
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      // Force clean old badges - more aggressive approach
+      const { oldBadges, validBadges, cleaned } = await badgeManager.forceCleanUserBadges(User, user._id);
+      
+      if (cleaned) {
+        user.badges = validBadges;
+        console.log(`[UserController] 🧹 Force cleaned old badges for user ${user._id}: ${oldBadges.join(', ')}`);
+      }
+
+      // Mark which badges the user has earned
+      const userBadges = new Set(user.badges || []);
+      
+      const badgesWithStatus = {
+        xpMilestones: allBadges.xpMilestones.map(badge => ({
+          ...badge,
+          earned: userBadges.has(badge.name),
+          earnedAt: userBadges.has(badge.name) ? 'Earned' : null
+        })),
+        specialXP: allBadges.specialXP.map(badge => ({
+          ...badge,
+          earned: badge.name === 'XP Legend' ? (user.xp >= 5000) : (user.xp >= 10000),
+          earnedAt: badge.name === 'XP Legend' ? (user.xp >= 5000 ? 'Earned' : null) : (user.xp >= 10000 ? 'Earned' : null)
+        })),
+        streaks: allBadges.streaks.map(badge => ({
+          ...badge,
+          earned: userBadges.has(badge.name),
+          earnedAt: userBadges.has(badge.name) ? 'Earned' : null
+        })),
+        selfAssessment: allBadges.selfAssessment.map(badge => ({
+          ...badge,
+          earned: userBadges.has(badge.name),
+          earnedAt: userBadges.has(badge.name) ? 'Earned' : null
+        }))
+      };
+
+      res.status(200).json({
+        success: true,
+        data: {
+          userStats: {
+            xp: user.xp || 0,
+            level: user.level || 1,
+            streak: user.streak || 0,
+            totalBadges: user.badges ? user.badges.length : 0
+          },
+          badges: badgesWithStatus
+        }
+      });
+    } catch (error) {
+      console.error('❌ Badges error:', error);
+      res.status(500).json({ success: false, message: 'Failed to fetch badges' });
     }
   }
 };

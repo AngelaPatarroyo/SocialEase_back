@@ -3,6 +3,7 @@ const ScenarioRepository = require('../repositories/ScenarioRepository');
 const FeedbackRepository = require('../repositories/FeedbackRepository');
 const ProgressRepository = require('../repositories/ProgressRepository');
 const AppError = require('../utils/errors');
+const badgeManager = require('../utils/badgeManager');
 
 class AdminService {
   async getAllUsers() {
@@ -31,6 +32,16 @@ class AdminService {
     const avgRating = await FeedbackRepository.getAverageRating();
 
     return { totalUsers, totalScenarios, totalFeedback, totalProgress, roleStats, avgRating };
+  }
+
+  async cleanupBadges() {
+    const User = require('../models/User');
+    return await badgeManager.cleanAllUsersBadges(User);
+  }
+
+  async cleanupUserBadges(userId) {
+    const User = require('../models/User');
+    return await badgeManager.forceCleanUserBadges(User, userId);
   }
 }
 

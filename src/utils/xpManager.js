@@ -10,10 +10,16 @@ async function addXP(userId, points) {
   if (!user) throw new Error('User not found');
 
   const currentXp = Number.isFinite(user.xp) ? user.xp : 0;
-  user.xp = currentXp + points;
-  user.level = calculateLevel(user.xp);
+  const newXp = currentXp + points;
+  const newLevel = calculateLevel(newXp);
+  
+  console.log(`[XPManager] User ${userId}: ${currentXp} + ${points} = ${newXp} XP, Level ${user.level} → ${newLevel}`);
+  
+  user.xp = newXp;
+  user.level = newLevel;
 
   await user.save();
+  console.log(`[XPManager] User ${userId} saved with ${user.xp} XP, Level ${user.level}`);
   return user;
 }
 

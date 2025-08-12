@@ -15,7 +15,7 @@ const updateProfileValidation = [
 ];
 
 const updatePasswordValidation = [
-  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('currentPassword').optional().isString().withMessage('Current password must be a string'),
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
 ];
 
@@ -27,9 +27,13 @@ router.put('/profile', authMiddleware, updateProfileValidation, validateRequest,
 router.get('/dashboard', authMiddleware, UserController.getDashboard);
 
 // Password
+router.get('/password/status', authMiddleware, UserController.getPasswordStatus);
 router.put('/password', authMiddleware, updatePasswordValidation, validateRequest, UserController.updatePassword);
 
 // Delete account
 router.delete('/delete', authMiddleware, UserController.deleteAccount);
+
+// Badges
+router.get('/badges', authMiddleware, UserController.getBadges);
 
 module.exports = router;

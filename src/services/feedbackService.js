@@ -3,7 +3,6 @@ const FeedbackRepository = require('../repositories/FeedbackRepository');
 const UserRepository = require('../repositories/UserRepository');
 const ScenarioRepository = require('../repositories/ScenarioRepository'); // <-- add this
 const AppError = require('../utils/errors');
-const { awardBadge } = require('../utils/badgeManager');
 
 async function resolveScenarioObjectId(scenarioIdOrSlug) {
   // If it's a valid ObjectId, use it directly
@@ -20,7 +19,7 @@ async function resolveScenarioObjectId(scenarioIdOrSlug) {
 
 class FeedbackService {
   /**
-   * Persist feedback and handle milestone badges.
+   * Persist feedback.
    * XP is handled in the controller (once).
    */
   async submitFeedback({ userId, scenarioId, reflection, rating }) {
@@ -33,22 +32,6 @@ class FeedbackService {
         reflection,
         rating,
       });
-
-      const feedbackCount = await FeedbackRepository.countByUserId(userId);
-
-      const user = await UserRepository.findById(userId);
-      if (!user) {
-        console.warn('[FeedbackService] User not found while evaluating badges:', userId);
-        return feedback;
-      }
-
-      if (feedbackCount === 10) {
-        try {
-          await awardBadge(user, 'Feedback Champ');
-        } catch (e) {
-          console.error('[FeedbackService] Award badge failed:', e);
-        }
-      }
 
       return feedback;
     } catch (err) {
