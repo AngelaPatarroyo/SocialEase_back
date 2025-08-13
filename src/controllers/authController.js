@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const AppError = require('../utils/errors');
+const authService = require('../services/authService');
 
 
 const oauth2Client = new google.auth.OAuth2(
@@ -19,30 +20,14 @@ const AuthController = {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(409).json({ message: 'User already exists' });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const user = await User.create({
-        name,
-        email,
-        password: hashedPassword,
-        avatar: 'default-avatar.png',
-        provider: 'local',
-        role: 'user',
-        theme: 'light',
-        xp: 0,
-        level: 1,
-        streak: 0,
-        badges: [],
-        goals: [],
-      });
+      // Use authService instead of duplicating logic
+      const user = await authService.register({ name, email, password });
 
       return res.status(201).json({ message: 'Registration successful' });
     } catch (err) {
+      if (err.message === 'Email already in use') {
+        return res.status(409).json({ message: 'User already exists' });
+      }
       next(err);
     }
   },

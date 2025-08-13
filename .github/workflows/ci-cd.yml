@@ -93,16 +93,16 @@ jobs:
     
     - name: Deploy to staging
       run: |
-        echo "🚀 Deploying to staging environment..."
-        echo "✅ Staging deployment completed successfully!"
-        echo "📊 Application health check passed"
+        echo "Deploying to staging environment..."
+        echo "Staging deployment completed successfully!"
+        echo "Application health check passed"
     
     - name: Health check
       run: |
-        echo "🏥 Running health checks..."
-        echo "✅ API endpoints responding"
-        echo "✅ Database connection stable"
-        echo "✅ All services running"
+        echo "Running health checks..."
+        echo "API endpoints responding"
+        echo "Database connection stable"
+        echo "All services running"
 
   # Job 4: Production Deployment (Manual trigger)
   deploy-production:
@@ -126,15 +126,15 @@ jobs:
     
     - name: Deploy to production
       run: |
-        echo "🚀 Deploying to production environment..."
-        echo "✅ Production deployment completed successfully!"
-        echo "📊 Application health check passed"
+        echo "Deploying to production environment..."
+        echo "Production deployment completed successfully!"
+        echo "Application health check passed"
     
     - name: Production health check
       run: |
-        echo "🏥 Running production health checks..."
-        echo "✅ API endpoints responding"
-        echo "✅ Database connection stable"
-        echo "✅ All services running"
-        echo "✅ SSL certificates valid"
-        echo "✅ Performance metrics normal" 
+        echo "Running production health checks..."
+        echo "API endpoints responding"
+        echo "Database connection stable"
+        echo "All services running"
+        echo "SSL certificates valid"
+        echo "Performance metrics normal" 

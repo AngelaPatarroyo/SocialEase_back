@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "docker:build": "docker build -t socialease-backend .",
+    "docker:run": "docker run -p 4000:4000 socialease-backend",
+    "docker:build-prod": "docker build --target production -t socialease-backend:prod .",
+    "docker:run-prod": "docker run -p 4000:4000 socialease-backend:prod"
   },
   "keywords": [],
   "author": "",

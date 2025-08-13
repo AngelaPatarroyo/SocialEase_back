@@ -15,16 +15,21 @@ class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with all required fields
     const user = await UserRepository.create({
       name,
       email,
       password: hashedPassword,
-      role: 'user', // Default role
+      avatar: 'default-avatar.png',
+      provider: 'local',
+      role: 'user',
+      theme: 'light',
       xp: 0,
       level: 1,
       streak: 0,
-      badges: []
+      badges: [],
+      goals: [],
+      hasCompletedSelfAssessment: false
     });
 
     // Return safe user data

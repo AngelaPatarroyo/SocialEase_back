@@ -6,16 +6,16 @@ const Scenario = require('../models/Scenario');
 const Feedback = require('../models/Feedback');
 const { levelMeta, buildLinear } = require('../utils/leveling');
 const badgeManager = require('../utils/badgeManager');
+const userService = require('../services/userService');
+const dashboardService = require('../services/dashboardService');
 
 const thresholdFn = buildLinear(100);
 
 const UserController = {
   async getProfile(req, res, next) {
     try {
-      const user = await User.findById(req.user.id).select('-password');
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
+      // Use userService instead of duplicating logic
+      const user = await userService.getProfile(req.user.id);
       
       // Check if user has a password (for Google users)
       const userWithPassword = await User.findById(req.user.id).select('password');
@@ -44,16 +44,9 @@ const UserController = {
   async updateProfile(req, res, next) {
     try {
       const { name, avatar, theme } = req.body;
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
-
-      if (name !== undefined) user.name = name;
-      if (avatar !== undefined) user.avatar = avatar;
-      if (theme !== undefined) user.theme = theme;
-
-      await user.save();
+      
+      // Use userService instead of duplicating logic
+      const user = await userService.updateProfile(req.user.id, { name, avatar, theme });
 
       res.status(200).json({
         success: true,
@@ -217,6 +210,10 @@ const UserController = {
 
   async getDashboard(req, res) {
     try {
+      // Use dashboardService instead of duplicating logic
+      const dashboardData = await dashboardService.getDashboard(req.user.id);
+      
+      // Get user for additional data
       const user = await User.findById(req.user.id).select('-password');
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
@@ -247,6 +244,8 @@ const UserController = {
           user,
           stats,
           goals: user.goals || [],
+          // Include dashboard service data
+          ...dashboardData
         },
       });
     } catch (error) {

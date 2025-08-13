@@ -25,8 +25,8 @@ class DashboardService {
       console.log('DEBUG: User XP/Level data:', { xp, level, streak, badgesCount: badges.length });
 
       // Check for new badges and award them
-      const newBadges = badgeManager.checkAchievements(user);
-      if (newBadges.length > 0) {
+      const newBadges = await badgeManager.checkAchievements(user);
+      if (newBadges && newBadges.length > 0) {
         console.log(`[DashboardService] 🎖️ New badges awarded: ${newBadges.join(', ')}`);
         user.badges = Array.from(new Set([...(user.badges || []), ...newBadges]));
         await user.save();

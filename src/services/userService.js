@@ -6,7 +6,7 @@ class UserService {
    * Fetch user profile by ID
    */
   async getProfile(userId) {
-    const user = await UserRepository.findById(userId);
+    const user = await UserRepository.findById(userId).select('-password');
     if (!user) throw new AppError('User not found', 404);
     return user;
   }
@@ -18,7 +18,11 @@ class UserService {
     const user = await UserRepository.findById(userId);
     if (!user) throw new AppError('User not found', 404);
 
-    Object.assign(user, updates);
+    // Only update fields that are provided
+    if (updates.name !== undefined) user.name = updates.name;
+    if (updates.avatar !== undefined) user.avatar = updates.avatar;
+    if (updates.theme !== undefined) user.theme = updates.theme;
+
     return await user.save();
   }
 }
