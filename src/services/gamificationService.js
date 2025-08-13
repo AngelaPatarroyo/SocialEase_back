@@ -54,7 +54,7 @@ async function updateUserGamification(userId, xpEarned = 0, session = null) {
   // Clean up any old badges first
   const { oldBadges, cleanedBadges } = badgeManager.cleanOldBadges(user);
   if (oldBadges.length > 0) {
-    console.log(`[GamificationService] 🧹 Cleaned old badges for user ${user._id}: ${oldBadges.join(', ')}`);
+            console.log(`[GamificationService] Removed old badges for user ${user._id}: ${oldBadges.join(', ')}`);
   }
   
   // Combine cleaned badges with new badges

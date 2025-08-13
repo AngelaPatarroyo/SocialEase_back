@@ -46,9 +46,9 @@ class FeedbackController {
       
       if (award > 0) {
         const updatedUser = await addXP(userId, award);
-        console.log(`[FeedbackController] ✅ XP awarded: ${award} XP. New total: ${updatedUser.xp}`);
+        console.log(`[FeedbackController] User earned ${award} XP. Total: ${updatedUser.xp}`);
       } else {
-        console.log(`[FeedbackController] ❌ No XP awarded - award was 0`);
+        console.log(`[FeedbackController] No XP earned - scenario worth 0 points`);
       }
 
       return res.status(201).json({

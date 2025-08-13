@@ -6,16 +6,10 @@ const { updateProgressValidation, paramUserIdValidation } = require('../validato
 const { authMiddleware } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 
-// TEMP debug – helps spot payload issues; remove after it’s fixed
-router.post('/update', (req, _res, next) => { 
-  console.log('[POST /api/progress/update] body:', req.body); 
-  next(); 
-});
-
 router.post(
   '/update',
   authMiddleware,
-  ...updateProgressValidation,   // spread!
+  ...updateProgressValidation,
   validateRequest,
   ProgressController.updateProgress
 );

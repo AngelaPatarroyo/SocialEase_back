@@ -9,39 +9,39 @@ class DashboardService {
    * Get user's dashboard data
    */
   async getDashboard(userId) {
-    console.log('DEBUG: Entered DashboardService.getDashboard with userId:', userId);
+    console.log('DashboardService: Loading dashboard:', userId);
 
     try {
       // Fetch user profile
       const user = await UserRepository.findById(userId);
-      console.log('DEBUG: User fetched:', user);
+      console.log('DashboardService: Profile loaded');
 
       if (!user) {
-        console.error('DEBUG: No user found in DB for ID:', userId);
+        console.error('DashboardService: User not found:', userId);
         throw new AppError('User not found', 404);
       }
 
       const { xp = 0, level = 1, streak = 0, badges = [] } = user;
-      console.log('DEBUG: User XP/Level data:', { xp, level, streak, badgesCount: badges.length });
+      console.log('DashboardService: Stats loaded');
 
       // Check for new badges and award them
       const newBadges = await badgeManager.checkAchievements(user);
       if (newBadges && newBadges.length > 0) {
-        console.log(`[DashboardService] 🎖️ New badges awarded: ${newBadges.join(', ')}`);
+        console.log(`[DashboardService] New badges: ${newBadges.join(', ')}`);
         user.badges = Array.from(new Set([...(user.badges || []), ...newBadges]));
         await user.save();
-        console.log(`[DashboardService] User badges updated: ${user.badges.join(', ')}`);
+        console.log(`[DashboardService] Badges updated: ${user.badges.join(', ')}`);
       }
 
       // Fetch progress safely
       const progress = await ProgressRepository.findByUserId(userId);
-      console.log('DEBUG: Progress fetched:', progress);
+      console.log('DashboardService: Progress loaded');
 
       const completedScenarios = progress?.completedScenarios || [];
 
       // Fetch self-assessments safely
       const assessments = (await SelfAssessmentRepository.findByUserId(userId)) || [];
-      console.log('DEBUG: Self-assessments fetched:', assessments.length);
+      console.log('DashboardService: Assessments loaded');
 
       // Generate anxiety-safe supportive messages
       const messages = [];
@@ -60,7 +60,7 @@ class DashboardService {
         messages
       };
 
-      console.log('DEBUG: Final dashboard response:', response);
+      console.log('DashboardService: Dashboard loaded');
       return response;
     } catch (error) {
       console.error('ERROR in DashboardService.getDashboard:', error.message, error.stack);

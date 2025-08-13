@@ -40,7 +40,7 @@ app.use('/api/auth/login', rateLimit({
   message: 'Too many login attempts, please try again later.',
 }));
 
-// Temporarily comment out rate limiting to debug login issue
+// Rate limiting disabled during development - re-enable for production
 // app.use('/api/auth/login', rateLimit({
 //   windowMs: 15 * 60 * 1000,
 //   max: 15,
@@ -99,8 +99,8 @@ const errorHandler = require('./src/middleware/errorHandler');
 app.use(errorHandler);
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+  .then(() => console.log('MongoDB Connected'))
+  .catch((err) => console.error('MongoDB Connection Error:', err));
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
