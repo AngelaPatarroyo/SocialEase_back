@@ -37,11 +37,18 @@ class FeedbackController {
       });
       if (!feedback) return next(new AppError('Failed to submit feedback', 500));
 
-      // 🎯 Award XP based on the scenario's xp (fallback to config if missing)
+      // 🎯 Award XP based on the scenario's points (fallback to config if missing)
       const scenario = await ScenarioRepository.findById(scenarioObjectId);
-      const award = Number(scenario?.xp ?? xpRewards?.scenarioComplete ?? 0);
+      const award = Number(scenario?.points ?? xpRewards?.scenarioCompletion ?? 0);
+      
+      console.log(`[FeedbackController] Scenario: ${scenario?.title || scenarioObjectId}`);
+      console.log(`[FeedbackController] Scenario Points: ${scenario?.points}, Fallback: ${xpRewards?.scenarioCompletion}, Final Award: ${award}`);
+      
       if (award > 0) {
-        await addXP(userId, award);
+        const updatedUser = await addXP(userId, award);
+        console.log(`[FeedbackController] ✅ XP awarded: ${award} XP. New total: ${updatedUser.xp}`);
+      } else {
+        console.log(`[FeedbackController] ❌ No XP awarded - award was 0`);
       }
 
       return res.status(201).json({

@@ -122,7 +122,7 @@ class SelfAssessmentService {
         user.hasCompletedSelfAssessment = true;
         user.selfAssessmentCompletedAt = new Date();
         
-        const newBadges = badgeManager.checkAchievements(user);
+        const newBadges = await badgeManager.checkAchievements(user);
         if (newBadges.length > 0) {
           user.badges = Array.from(new Set([...(user.badges || []), ...newBadges]));
           console.log(`[SelfAssessmentService] Awarded badges: ${newBadges.join(', ')}`);

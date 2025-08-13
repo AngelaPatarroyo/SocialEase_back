@@ -63,6 +63,19 @@ class AdminController {
       next(err);
     }
   }
+
+  async removeUserBadges(req, res, next) {
+    try {
+      const result = await AdminService.removeUserBadges(req.params.userId, req.body.badges);
+      res.status(200).json({
+        success: true,
+        message: 'Badges removed successfully',
+        data: result
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new AdminController();

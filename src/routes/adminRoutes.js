@@ -154,6 +154,49 @@ router.post('/badges/cleanup/:userId',
 
 /**
  * @swagger
+ * /api/admin/badges/remove/{userId}:
+ *   post:
+ *     summary: Remove specific badges from a user (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               badges:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of badge names to remove
+ *     responses:
+ *       200:
+ *         description: Badges removed successfully
+ *       500:
+ *         description: Server error during removal
+ */
+router.post('/badges/remove/:userId',
+  authMiddleware,
+  isAdmin,
+  [
+    param('userId').isMongoId().withMessage('Valid userId is required'),
+    body('badges').isArray().withMessage('Badges must be an array')
+  ],
+  validateRequest,
+  (req, res) => AdminController.removeUserBadges(req, res)
+);
+
+/**
+ * @swagger
  * /api/admin/analytics:
  *   get:
  *     summary: Get platform analytics (Admin only)

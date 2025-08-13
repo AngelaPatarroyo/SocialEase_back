@@ -43,6 +43,11 @@ class AdminService {
     const User = require('../models/User');
     return await badgeManager.forceCleanUserBadges(User, userId);
   }
+
+  async removeUserBadges(userId, badgesToRemove) {
+    const User = require('../models/User');
+    return await badgeManager.removeSpecificBadges(User, userId, badgesToRemove);
+  }
 }
 
 module.exports = new AdminService();

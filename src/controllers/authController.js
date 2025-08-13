@@ -49,27 +49,34 @@ const AuthController = {
 
   async login(req, res, next) {
     try {
+      console.log('🔐 [AuthController] Login attempt started');
       const { email, password } = req.body;
 
-
+      console.log('🔐 [AuthController] Looking up user with email:', email);
       const user = await User.findOne({ email }).select('+password');
 
       if (!user) {
+        console.log('❌ [AuthController] User not found for email:', email);
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
+      console.log('✅ [AuthController] User found, checking password');
       // Check if user has a password (Google users might not have one)
       if (!user.password) {
+        console.log('❌ [AuthController] User has no password (Google user)');
         return res.status(401).json({ 
           message: 'This account was created with Google. Please use Google Sign-In or set a password in your profile.' 
         });
       }
 
+      console.log('🔐 [AuthController] Comparing passwords');
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
+        console.log('❌ [AuthController] Password mismatch');
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
+      console.log('✅ [AuthController] Password verified, generating token');
       const token = jwt.sign(
         { id: user._id.toString(), role: user.role },
         process.env.JWT_SECRET,
@@ -79,9 +86,10 @@ const AuthController = {
       const userWithoutPassword = user.toObject();
       delete userWithoutPassword.password;
 
+      console.log('✅ [AuthController] Login successful, sending response');
       return res.status(200).json({ token, user: userWithoutPassword }); //  return both
     } catch (err) {
-      console.error('❌ Login error:', err);
+      console.error('❌ [AuthController] Login error:', err);
       next(err);
     }
   },

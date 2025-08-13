@@ -3,12 +3,14 @@ const ProgressRepository = require('../repositories/ProgressRepository');
 const UserRepository = require('../repositories/UserRepository');
 const ScenarioRepository = require('../repositories/ScenarioRepository');
 const { resolveScenarioObjectId } = require('../utils/resolveScenarioId');
+const { addXP } = require('../utils/xpManager');
+const xpRewards = require('../config/xpRewards');
 const AppError = require('../utils/errors');
 
 class ProgressService {
   /**
    * Marks scenario complete (slug or ObjectId) and handles achievements.
-   * XP is awarded in FeedbackController.submit, not here.
+   * Note: XP is awarded in FeedbackController.submit, this just marks completion.
    */
   async updateProgress(userId, scenarioIdOrSlug) {
     try {
@@ -22,6 +24,9 @@ class ProgressService {
       if (!scenario) throw new AppError('Scenario not found', 404);
 
       const updatedProgress = await ProgressRepository.addScenario(userId, scenarioId);
+
+      // Ensure user data is refreshed after progress update
+      await UserRepository.findById(userId);
 
       return updatedProgress;
     } catch (err) {

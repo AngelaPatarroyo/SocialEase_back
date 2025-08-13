@@ -49,7 +49,7 @@ async function updateUserGamification(userId, xpEarned = 0, session = null) {
   user.lastCompletedDate = new Date();
 
   // Badges
-  const newBadges = badgeManager.checkAchievements(user) || [];
+  const newBadges = await badgeManager.checkAchievements(user) || [];
   
   // Clean up any old badges first
   const { oldBadges, cleanedBadges } = badgeManager.cleanOldBadges(user);

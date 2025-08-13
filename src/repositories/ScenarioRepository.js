@@ -14,6 +14,10 @@ class ScenarioRepository {
     return Scenario.findById(id);
   }
 
+  async findByIds(ids) {
+    return Scenario.find({ _id: { $in: ids } });
+  }
+
   async update(id, data) {
     return Scenario.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   }

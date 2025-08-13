@@ -40,6 +40,13 @@ app.use('/api/auth/login', rateLimit({
   message: 'Too many login attempts, please try again later.',
 }));
 
+// Temporarily comment out rate limiting to debug login issue
+// app.use('/api/auth/login', rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 15,
+//   message: 'Too many login attempts, please try again later.',
+// }));
+
 const { swaggerUi, swaggerSpec } = require('./src/config/swagger');
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -51,7 +58,7 @@ const feedbackRoutes = require('./src/routes/feedbackRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const selfAssessmentRoutes = require('./src/routes/selfAssessmentRoutes');
 const cloudinaryRoutes = require('./src/routes/cloudinaryRoutes');
-const goalRoutes = require('./src/routes/goalRoutes');       // <-- ADD THIS
+const goalRoutes = require('./src/routes/goalRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
@@ -61,9 +68,28 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/self-assessment', selfAssessmentRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
-app.use('/api/goals', goalRoutes);                           
+app.use('/api/goals', goalRoutes);
 
 app.get('/test', (req, res) => res.send('API is working ✅'));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Simple auth test endpoint
+app.get('/auth-test', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'Auth routes are accessible',
+    timestamp: new Date().toISOString()
+  });
+});
 
 app.use((req, res) => {
   res.status(404).json({ status: 'error', message: `Not Found - ${req.originalUrl}` });

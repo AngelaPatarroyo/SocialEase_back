@@ -1,8 +1,23 @@
 const Progress = require('../models/Progress');
 
 class ProgressRepository {
-  async findByUserId(userId) {
-    return Progress.findOne({ userId });
+  async findByUserId(userId, options = {}) {
+    const { limit, sort } = options;
+    let query = Progress.find({ userId });
+    
+    if (sort) {
+      query = query.sort(sort);
+    }
+    
+    if (limit) {
+      query = query.limit(limit);
+    }
+    
+    return query.exec();
+  }
+
+  async countByUserId(userId) {
+    return Progress.countDocuments({ userId });
   }
 
   /**
