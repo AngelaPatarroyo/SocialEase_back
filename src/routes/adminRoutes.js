@@ -28,7 +28,63 @@ const validateRequest = require('../middleware/validateRequest');
 router.get('/users',
   authMiddleware,
   isAdmin,
-  (req, res) => AdminController.getAllUsers(req, res)
+  (req, res, next) => AdminController.getAllUsers(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/admin/users:
+ *   post:
+ *     summary: Create a new user (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: User's full name
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email address
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: User's password
+ *               role:
+ *                 type: string
+ *                 enum: [user, admin]
+ *                 default: user
+ *                 description: User's role
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Validation error
+ *       409:
+ *         description: User already exists
+ */
+router.post('/users',
+  authMiddleware,
+  isAdmin,
+  [
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+    body('role').optional().isIn(['user', 'admin']).withMessage('Role must be either user or admin')
+  ],
+  validateRequest,
+  (req, res, next) => AdminController.createUser(req, res, next)
 );
 
 /**
@@ -69,7 +125,7 @@ router.patch('/users/:id/role',
     body('role').isIn(['user', 'admin']).withMessage('Role must be either user or admin')
   ],
   validateRequest,
-  (req, res) => AdminController.updateUserRole(req, res)
+  (req, res, next) => AdminController.updateUserRole(req, res, next)
 );
 
 /**
@@ -99,7 +155,7 @@ router.delete('/users/:id',
     param('id').isMongoId().withMessage('Valid userId is required')
   ],
   validateRequest,
-  (req, res) => AdminController.deleteUser(req, res)
+  (req, res, next) => AdminController.deleteUser(req, res, next)
 );
 
 /**
@@ -119,7 +175,7 @@ router.delete('/users/:id',
 router.post('/badges/cleanup',
   authMiddleware,
   isAdmin,
-  (req, res) => AdminController.cleanupBadges(req, res)
+  (req, res, next) => AdminController.cleanupBadges(req, res, next)
 );
 
 /**
@@ -149,7 +205,7 @@ router.post('/badges/cleanup/:userId',
     param('userId').isMongoId().withMessage('Valid userId is required')
   ],
   validateRequest,
-  (req, res) => AdminController.cleanupUserBadges(req, res)
+  (req, res, next) => AdminController.cleanupUserBadges(req, res, next)
 );
 
 /**
@@ -192,7 +248,7 @@ router.post('/badges/remove/:userId',
     body('badges').isArray().withMessage('Badges must be an array')
   ],
   validateRequest,
-  (req, res) => AdminController.removeUserBadges(req, res)
+  (req, res, next) => AdminController.removeUserBadges(req, res, next)
 );
 
 /**
@@ -210,7 +266,57 @@ router.post('/badges/remove/:userId',
 router.get('/analytics',
   authMiddleware,
   isAdmin,
-  (req, res) => AdminController.getAnalytics(req, res)
+  (req, res, next) => AdminController.getAnalytics(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/admin/feedback:
+ *   get:
+ *     summary: Get all feedback from all users (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All feedback retrieved successfully
+ */
+router.get('/feedback',
+  authMiddleware,
+  isAdmin,
+  (req, res, next) => AdminController.getAllFeedback(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/admin/feedback/{id}:
+ *   delete:
+ *     summary: Delete a specific feedback entry (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Feedback deleted successfully
+ *       404:
+ *         description: Feedback not found
+ *       500:
+ *         description: Server error during deletion
+ */
+router.delete('/feedback/:id',
+  authMiddleware,
+  isAdmin,
+  [
+    param('id').isMongoId().withMessage('Valid feedback ID is required')
+  ],
+  validateRequest,
+  (req, res, next) => AdminController.deleteFeedback(req, res, next)
 );
 
 module.exports = router;

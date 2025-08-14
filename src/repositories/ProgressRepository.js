@@ -39,6 +39,10 @@ class ProgressRepository {
       { new: true, upsert: true }
     );
   }
+
+  async count() {
+    return Progress.countDocuments();
+  }
 }
 
 module.exports = new ProgressRepository();

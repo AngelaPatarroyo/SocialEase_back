@@ -11,6 +11,19 @@ class AdminController {
     }
   }
 
+  async createUser(req, res, next) {
+    try {
+      const user = await AdminService.createUser(req.body);
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+        data: user
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async updateUserRole(req, res, next) {
     try {
       const user = await AdminService.updateUserRole(req.params.id, req.body.role);
@@ -34,6 +47,42 @@ class AdminController {
       const analytics = await AdminService.getAnalytics();
       res.status(200).json(analytics);
     } catch (err) {
+      next(err);
+    }
+  }
+
+  async getAllFeedback(req, res, next) {
+    try {
+      console.log('🔍 [AdminController] getAllFeedback called');
+      const feedback = await AdminService.getAllFeedback();
+      console.log('📊 [AdminController] Feedback from service:', {
+        type: typeof feedback,
+        isArray: Array.isArray(feedback),
+        length: feedback ? feedback.length : 'null/undefined',
+        sample: feedback && feedback.length > 0 ? feedback[0] : 'no data'
+      });
+      res.status(200).json(feedback); // Send array directly for consistency
+    } catch (err) {
+      console.error('❌ [AdminController] Error in getAllFeedback:', err);
+      next(err);
+    }
+  }
+
+  async deleteFeedback(req, res, next) {
+    try {
+      const { id } = req.params;
+      console.log('🗑️ [AdminController] deleteFeedback called with ID:', id);
+      
+      const result = await AdminService.deleteFeedback(id);
+      
+      if (!result) {
+        return res.status(404).json({ message: 'Feedback not found' });
+      }
+      
+      console.log('✅ [AdminController] Feedback deleted successfully:', { id });
+      res.status(200).json({ message: 'Feedback deleted successfully' });
+    } catch (err) {
+      console.error('❌ [AdminController] Error in deleteFeedback:', err);
       next(err);
     }
   }
