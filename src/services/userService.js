@@ -6,7 +6,7 @@ class UserService {
    * Fetch user profile by ID
    */
   async getProfile(userId) {
-    const user = await UserRepository.findById(userId).select('-password');
+    const user = await UserRepository.findById(userId);
     if (!user) throw new AppError('User not found', 404);
     return user;
   }
