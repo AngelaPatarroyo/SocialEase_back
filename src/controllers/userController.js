@@ -6,16 +6,16 @@ const Scenario = require('../models/Scenario');
 const Feedback = require('../models/Feedback');
 const { levelMeta, buildLinear } = require('../utils/leveling');
 const badgeManager = require('../utils/badgeManager');
+const userService = require('../services/userService');
+const dashboardService = require('../services/dashboardService');
 
 const thresholdFn = buildLinear(100);
 
 const UserController = {
   async getProfile(req, res, next) {
     try {
-      const user = await User.findById(req.user.id).select('-password');
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
+      // Use userService instead of duplicating logic
+      const user = await userService.getProfile(req.user.id);
       
       // Check if user has a password (for Google users)
       const userWithPassword = await User.findById(req.user.id).select('password');
@@ -44,16 +44,9 @@ const UserController = {
   async updateProfile(req, res, next) {
     try {
       const { name, avatar, theme } = req.body;
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
-
-      if (name !== undefined) user.name = name;
-      if (avatar !== undefined) user.avatar = avatar;
-      if (theme !== undefined) user.theme = theme;
-
-      await user.save();
+      
+      // Use userService instead of duplicating logic
+      const user = await userService.updateProfile(req.user.id, { name, avatar, theme });
 
       res.status(200).json({
         success: true,
@@ -67,14 +60,14 @@ const UserController = {
 
   async getPasswordStatus(req, res, next) {
     try {
-      console.log(`🔍 [PasswordStatusController] Looking up user with ID: ${req.user.id}`);
+              console.log(`[PasswordStatusController] Checking user ID: ${req.user.id}`);
       
       const user = await User.findById(req.user.id).select('provider password email');
       
-      console.log(`🔍 [PasswordStatusController] User lookup result:`, user ? 'User found' : 'User not found');
+              console.log(`[PasswordStatusController] User lookup:`, user ? 'Found' : 'Not found');
       
       if (!user) {
-        console.log(`❌ [PasswordStatusController] No user found for ID: ${req.user.id}`);
+        console.log(`[PasswordStatusController] No user found for ID: ${req.user.id}`);
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
@@ -102,13 +95,13 @@ const UserController = {
 
   async updatePassword(req, res, next) {
     try {
-      console.log(`🔐 [PasswordController] Password update request for user ID: ${req.user.id}`);
-      console.log(`🔐 [PasswordController] Request body:`, { currentPassword: !!req.body.currentPassword, newPassword: !!req.body.newPassword });
+              console.log(`[PasswordController] Password update request for user ID: ${req.user.id}`);
+              console.log(`[PasswordController] Password update request:`, { currentPassword: !!req.body.currentPassword, newPassword: !!req.body.newPassword });
       
       const { currentPassword, newPassword } = req.body;
       const user = await User.findById(req.user.id).select('+password provider email');
 
-      console.log(`🔐 [PasswordController] User lookup result:`, user ? `User found: ${user.email} (provider: ${user.provider})` : 'User not found');
+              console.log(`[PasswordController] User found:`, user ? `${user.email} (${user.provider})` : 'Not found');
 
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
@@ -123,14 +116,14 @@ const UserController = {
       }
 
       const isGoogleUserWithoutPassword = user.provider === 'google' && !user.password;
-      console.log(`🔐 [PasswordController] Google user without password: ${isGoogleUserWithoutPassword}`);
+                console.log(`[PasswordController] Google user needs password setup: ${isGoogleUserWithoutPassword}`);
 
       if (isGoogleUserWithoutPassword) {
         // Google user setting password for the first time
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
         
-        console.log(`🔐 Google user ${user.email} set password for the first time`);
+                  console.log(`[PasswordController] Google user ${user.email} created first password`);
       } else if (user.provider === 'google' && user.password) {
         // Google user updating existing password
         if (currentPassword) {
@@ -154,7 +147,7 @@ const UserController = {
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
         
-        console.log(`🔐 Google user ${user.email} updated password`);
+                  console.log(`[PasswordController] Google user ${user.email} changed password`);
       } else {
         // Local user updating password
         if (!currentPassword) {
@@ -183,7 +176,7 @@ const UserController = {
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
         
-        console.log(`🔐 Local user ${user.email} updated password`);
+                  console.log(`[PasswordController] Local user ${user.email} changed password`);
       }
 
       const token = jwt.sign(
@@ -217,6 +210,10 @@ const UserController = {
 
   async getDashboard(req, res) {
     try {
+      // Use dashboardService instead of duplicating logic
+      const dashboardData = await dashboardService.getDashboard(req.user.id);
+      
+      // Get user for additional data
       const user = await User.findById(req.user.id).select('-password');
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
@@ -247,6 +244,8 @@ const UserController = {
           user,
           stats,
           goals: user.goals || [],
+          // Include dashboard service data
+          ...dashboardData
         },
       });
     } catch (error) {
@@ -294,7 +293,7 @@ const UserController = {
       
       if (cleaned) {
         user.badges = validBadges;
-        console.log(`[UserController] 🧹 Force cleaned old badges for user ${user._id}: ${oldBadges.join(', ')}`);
+        console.log(`[UserController] Cleaned old badges for user ${user._id}: ${oldBadges.join(', ')}`);
       }
 
       // Mark which badges the user has earned

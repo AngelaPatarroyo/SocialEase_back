@@ -10,7 +10,7 @@ const AppError = require('../utils/errors');
 class ProgressService {
   /**
    * Marks scenario complete (slug or ObjectId) and handles achievements.
-   * Note: XP is awarded in FeedbackController.submit, this just marks completion.
+   * XP gets awarded when user submits feedback, this just tracks completion.
    */
   async updateProgress(userId, scenarioIdOrSlug) {
     try {
