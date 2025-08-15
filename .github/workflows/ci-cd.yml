@@ -31,6 +31,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,13 +48,13 @@ jobs:
       - name: Create environment file
         run: |
           echo "NODE_ENV=test" > .env
-          echo "MONGO_URI=mongodb://test:test123@localhost:27017/test?authSource=admin" >> .env
+          echo "MONGO_URI=mongodb://localhost:27017/test" >> .env
           echo "JWT_SECRET=test-secret-key" >> .env
           echo "PORT=4000" >> .env
 
       - name: Wait for MongoDB
         run: |
-          timeout 120 bash -c 'until mongosh --host localhost:27017 --username test --password test123 --authenticationDatabase admin --eval "db.runCommand(\"ping\").ok" --quiet; do sleep 2; done'
+          timeout 120 bash -c 'until mongosh --host localhost:27017 --eval "db.runCommand(\"ping\").ok" --quiet; do sleep 2; done'
 
       - name: Run tests with increased timeout
         run: |

@@ -8,24 +8,43 @@ let app;
 // Mock the server app for testing
 beforeAll(async () => {
   try {
-    // Start in-memory MongoDB for testing
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
+    // Check if we're in CI environment (real MongoDB) or local (in-memory)
+    const isCI = process.env.CI === 'true';
     
-    // Set test environment
-    process.env.MONGO_URI = mongoUri;
-    process.env.JWT_SECRET = 'test-secret-key';
-    
-    // Import app after setting environment
-    app = require('../server');
-    
-    // Wait for MongoDB connection with timeout
-    await Promise.race([
-      mongoose.connect(mongoUri),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('MongoDB connection timeout')), 15000)
-      )
-    ]);
+    if (isCI) {
+      // In CI, use the MongoDB service provided by GitHub Actions
+      console.log('🚀 CI Environment detected - using MongoDB service');
+      process.env.JWT_SECRET = 'test-secret-key';
+      app = require('../server');
+      
+      // Wait for MongoDB connection with timeout
+      await Promise.race([
+        mongoose.connect(process.env.MONGO_URI),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('MongoDB connection timeout')), 20000)
+        )
+      ]);
+    } else {
+      // Local development - use in-memory MongoDB
+      console.log('💻 Local Environment detected - using MongoDB Memory Server');
+      mongoServer = await MongoMemoryServer.create();
+      const mongoUri = mongoServer.getUri();
+      
+      // Set test environment
+      process.env.MONGO_URI = mongoUri;
+      process.env.JWT_SECRET = 'test-secret-key';
+      
+      // Import app after setting environment
+      app = require('../server');
+      
+      // Wait for MongoDB connection with timeout
+      await Promise.race([
+        mongoose.connect(mongoUri),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('MongoDB connection timeout')), 15000)
+        )
+      ]);
+    }
     
     console.log('✅ MongoDB connected for testing');
   } catch (error) {
@@ -50,16 +69,16 @@ afterAll(async () => {
       console.log('✅ MongoDB disconnected');
     }
     
-    // Force stop MongoDB server with timeout
-    if (mongoServer) {
-      console.log('🛑 Stopping MongoDB server...');
+    // Only stop MongoDB server if we're in local environment
+    if (mongoServer && process.env.CI !== 'true') {
+      console.log('🛑 Stopping MongoDB Memory Server...');
       await Promise.race([
         mongoServer.stop(),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('MongoDB server stop timeout')), 8000)
         )
       ]);
-      console.log('✅ MongoDB server stopped');
+      console.log('✅ MongoDB Memory Server stopped');
     }
     
     console.log('✅ Test cleanup completed');
@@ -72,7 +91,7 @@ afterAll(async () => {
       if (mongoose.connection.readyState !== 0) {
         mongoose.disconnect();
       }
-      if (mongoServer) {
+      if (mongoServer && process.env.CI !== 'true') {
         mongoServer.stop();
       }
     } catch (cleanupError) {
