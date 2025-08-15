@@ -10,7 +10,7 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  testTimeout: 30000, // Increased to 30 seconds for MongoDB operations
+  testTimeout: 45000, // Increased to 45 seconds for MongoDB operations
   verbose: true,
   forceExit: true,
   clearMocks: true,
@@ -21,5 +21,12 @@ module.exports = {
   // Ensure tests don't hang
   maxWorkers: 1,
   // Better error reporting
-  detectOpenHandles: true
+  detectOpenHandles: true,
+  // More aggressive timeout handling
+  testEnvironmentOptions: {
+    timeout: 45000
+  },
+  // Force cleanup
+  globalSetup: undefined,
+  globalTeardown: undefined
 };

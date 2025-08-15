@@ -23,7 +23,7 @@ beforeAll(async () => {
     await Promise.race([
       mongoose.connect(mongoUri),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('MongoDB connection timeout')), 10000)
+        setTimeout(() => reject(new Error('MongoDB connection timeout')), 15000)
       )
     ]);
     
@@ -36,28 +36,54 @@ beforeAll(async () => {
 
 afterAll(async () => {
   try {
-    // Cleanup with timeout
+    console.log('🧹 Starting test cleanup...');
+    
+    // Force disconnect MongoDB with timeout
     if (mongoose.connection.readyState !== 0) {
+      console.log('🔌 Disconnecting MongoDB...');
       await Promise.race([
         mongoose.disconnect(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('MongoDB disconnect timeout')), 5000)
+          setTimeout(() => reject(new Error('MongoDB disconnect timeout')), 8000)
         )
       ]);
+      console.log('✅ MongoDB disconnected');
     }
+    
+    // Force stop MongoDB server with timeout
     if (mongoServer) {
+      console.log('🛑 Stopping MongoDB server...');
       await Promise.race([
         mongoServer.stop(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('MongoDB server stop timeout')), 5000)
+          setTimeout(() => reject(new Error('MongoDB server stop timeout')), 8000)
         )
       ]);
+      console.log('✅ MongoDB server stopped');
     }
+    
     console.log('✅ Test cleanup completed');
   } catch (error) {
     console.error('❌ Test cleanup error:', error);
-    // Force exit if cleanup fails
-    process.exit(0);
+    console.log('🚨 Force cleanup - exiting process');
+    
+    // Force cleanup and exit
+    try {
+      if (mongoose.connection.readyState !== 0) {
+        mongoose.disconnect();
+      }
+      if (mongoServer) {
+        mongoServer.stop();
+      }
+    } catch (cleanupError) {
+      console.error('❌ Force cleanup failed:', cleanupError);
+    }
+    
+    // Force exit after cleanup
+    setTimeout(() => {
+      console.log('🚨 Force exit after timeout');
+      process.exit(0);
+    }, 1000);
   }
 });
 

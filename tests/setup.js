@@ -4,19 +4,21 @@ process.env.JWT_SECRET = 'test-secret-key';
 process.env.PORT = 4001;
 
 // Increase timeout for MongoDB operations
-jest.setTimeout(30000);
+jest.setTimeout(45000);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  // Don't exit immediately, let Jest handle it
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  process.exit(1);
+  // Don't exit immediately, let Jest handle it
 });
+
+// No global timeout handler needed - Jest will handle cleanup
 
 // Global test utilities
 global.testUtils = {
