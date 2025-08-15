@@ -16,8 +16,6 @@ module.exports = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  // Add MongoDB-specific timeout handling
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   // Ensure tests don't hang
   maxWorkers: 1,
   // Better error reporting

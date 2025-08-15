@@ -44,7 +44,8 @@ global.testUtils = {
 };
 
 // Suppress console.log during tests unless explicitly needed
-if (process.env.NODE_ENV === 'test') {
+// But keep console output in CI for debugging
+if (process.env.NODE_ENV === 'test' && !process.env.CI) {
   console.log = jest.fn();
   console.error = jest.fn();
   console.warn = jest.fn();

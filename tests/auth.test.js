@@ -14,16 +14,30 @@ beforeAll(async () => {
     if (isCI) {
       // In CI, use the MongoDB service provided by GitHub Actions
       console.log('🚀 CI Environment detected - using MongoDB service');
+      console.log('🔍 CI Environment variables:', {
+        NODE_ENV: process.env.NODE_ENV,
+        MONGO_URI: process.env.MONGO_URI ? 'SET' : 'NOT SET',
+        JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+        PORT: process.env.PORT
+      });
+      
+      // Ensure required environment variables are set
+      if (!process.env.MONGO_URI) {
+        throw new Error('MONGO_URI not set in CI environment');
+      }
+      
       process.env.JWT_SECRET = 'test-secret-key';
       app = require('../server');
       
       // Wait for MongoDB connection with timeout
+      console.log('🔌 Connecting to MongoDB in CI...');
       await Promise.race([
         mongoose.connect(process.env.MONGO_URI),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('MongoDB connection timeout')), 20000)
         )
       ]);
+      console.log('✅ MongoDB connected in CI');
     } else {
       // Local development - use in-memory MongoDB
       console.log('💻 Local Environment detected - using MongoDB Memory Server');
@@ -84,25 +98,20 @@ afterAll(async () => {
     console.log('✅ Test cleanup completed');
   } catch (error) {
     console.error('❌ Test cleanup error:', error);
-    console.log('🚨 Force cleanup - exiting process');
     
-    // Force cleanup and exit
+    // Force cleanup without exiting (let Jest handle it)
     try {
       if (mongoose.connection.readyState !== 0) {
-        mongoose.disconnect();
+        await mongoose.disconnect();
       }
       if (mongoServer && process.env.CI !== 'true') {
-        mongoServer.stop();
+        await mongoServer.stop();
       }
     } catch (cleanupError) {
       console.error('❌ Force cleanup failed:', cleanupError);
     }
     
-    // Force exit after cleanup
-    setTimeout(() => {
-      console.log('🚨 Force exit after timeout');
-      process.exit(0);
-    }, 1000);
+    console.log('✅ Force cleanup completed');
   }
 });
 
