@@ -139,9 +139,12 @@ app.use((req, res) => {
 const errorHandler = require('./src/middleware/errorHandler');
 app.use(errorHandler);
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+// Only connect to MongoDB if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+}
 
 const PORT = process.env.PORT || 4000;
 
