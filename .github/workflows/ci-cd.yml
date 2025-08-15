@@ -20,9 +20,6 @@ jobs:
     services:
       mongodb:
         image: mongo:6.0
-        env:
-          MONGO_INITDB_ROOT_USERNAME: test
-          MONGO_INITDB_ROOT_PASSWORD: test123
         ports:
           - 27017:27017
         options: >-
@@ -47,17 +44,26 @@ jobs:
 
       - name: Check MongoDB service status
         run: |
-          echo "Checking MongoDB service status..."
-          docker ps
-          echo "Checking MongoDB logs..."
-          docker logs $(docker ps -q --filter "ancestor=mongo:6.0") 2>/dev/null || echo "No MongoDB container logs found"
-          echo "Checking if port 27017 is listening..."
+          echo "🔍 Checking MongoDB service status..."
+          echo "📊 Docker containers:"
+          docker ps -a
+          echo ""
+          echo "🐳 Docker images:"
+          docker images | grep mongo
+          echo ""
+          echo "📝 Docker logs (if container exists):"
+          docker logs $(docker ps -a -q --filter "ancestor=mongo:6.0") 2>/dev/null || echo "No MongoDB container found"
+          echo ""
+          echo "🌐 Port status:"
           netstat -tlnp 2>/dev/null | grep 27017 || echo "Port 27017 not listening"
+          echo ""
+          echo "💾 Docker system info:"
+          docker system df
 
       - name: Create environment file
         run: |
           echo "NODE_ENV=test" > .env
-          echo "MONGO_URI=mongodb://test:test123@localhost:27017/test" >> .env
+          echo "MONGO_URI=mongodb://localhost:27017/test" >> .env
           echo "JWT_SECRET=test-secret-key" >> .env
           echo "PORT=4000" >> .env
 
@@ -74,7 +80,7 @@ jobs:
           echo "Testing MongoDB connection..."
           timeout 30 node -e "
             const mongoose = require('mongoose');
-            mongoose.connect('mongodb://test:test123@localhost:27017/test')
+            mongoose.connect('mongodb://localhost:27017/test')
               .then(() => { 
                 console.log('✅ MongoDB connected successfully!'); 
                 process.exit(0); 
@@ -123,7 +129,7 @@ jobs:
           NODE_ENV: test
           JWT_SECRET: test-secret-key
           PORT: 4000
-          MONGO_URI: mongodb://test:test123@localhost:27017/test
+          MONGO_URI: mongodb://localhost:27017/test
         timeout-minutes: 10
 
       - name: Run linting
