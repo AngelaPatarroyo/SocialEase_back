@@ -8,35 +8,31 @@ let app;
 // Mock the server app for testing
 beforeAll(async () => {
   try {
-    // Check if we're in CI environment (real MongoDB) or local (in-memory)
+    console.log('🚀 Setting up test environment...');
+    console.log('🔍 Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      CI: process.env.CI,
+      MONGO_URI: process.env.MONGO_URI ? 'SET' : 'NOT SET'
+    });
+    
+    // Always set required environment variables
+    process.env.JWT_SECRET = 'test-secret-key';
+    process.env.NODE_ENV = 'test';
+    
+    // Check if we're in CI environment
     const isCI = process.env.CI === 'true';
     
     if (isCI) {
       // In CI, use the MongoDB service provided by GitHub Actions
       console.log('🚀 CI Environment detected - using MongoDB service');
-      console.log('🔍 CI Environment variables:', {
-        NODE_ENV: process.env.NODE_ENV,
-        MONGO_URI: process.env.MONGO_URI ? 'SET' : 'NOT SET',
-        JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
-        PORT: process.env.PORT
-      });
       
-      // Ensure required environment variables are set
+      // Ensure MONGO_URI is set
       if (!process.env.MONGO_URI) {
         throw new Error('MONGO_URI not set in CI environment');
       }
       
-      process.env.JWT_SECRET = 'test-secret-key';
-      app = require('../server');
-      
-      // Wait for MongoDB connection with timeout
       console.log('🔌 Connecting to MongoDB in CI...');
-      await Promise.race([
-        mongoose.connect(process.env.MONGO_URI),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('MongoDB connection timeout')), 20000)
-        )
-      ]);
+      await mongoose.connect(process.env.MONGO_URI);
       console.log('✅ MongoDB connected in CI');
     } else {
       // Local development - use in-memory MongoDB
@@ -46,21 +42,15 @@ beforeAll(async () => {
       
       // Set test environment
       process.env.MONGO_URI = mongoUri;
-      process.env.JWT_SECRET = 'test-secret-key';
       
-      // Import app after setting environment
-      app = require('../server');
-      
-      // Wait for MongoDB connection with timeout
-      await Promise.race([
-        mongoose.connect(mongoUri),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('MongoDB connection timeout')), 15000)
-        )
-      ]);
+      console.log('🔌 Connecting to MongoDB Memory Server...');
+      await mongoose.connect(mongoUri);
+      console.log('✅ MongoDB Memory Server connected');
     }
     
-    console.log('✅ MongoDB connected for testing');
+    // Import app after MongoDB connection is established
+    app = require('../server');
+    console.log('✅ Test environment setup completed');
   } catch (error) {
     console.error('❌ Failed to setup test environment:', error);
     throw error;
@@ -71,27 +61,17 @@ afterAll(async () => {
   try {
     console.log('🧹 Starting test cleanup...');
     
-    // Force disconnect MongoDB with timeout
+    // Disconnect MongoDB
     if (mongoose.connection.readyState !== 0) {
       console.log('🔌 Disconnecting MongoDB...');
-      await Promise.race([
-        mongoose.disconnect(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('MongoDB disconnect timeout')), 8000)
-        )
-      ]);
+      await mongoose.disconnect();
       console.log('✅ MongoDB disconnected');
     }
     
-    // Only stop MongoDB server if we're in local environment
+    // Stop MongoDB Memory Server (local only)
     if (mongoServer && process.env.CI !== 'true') {
       console.log('🛑 Stopping MongoDB Memory Server...');
-      await Promise.race([
-        mongoServer.stop(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('MongoDB server stop timeout')), 8000)
-        )
-      ]);
+      await mongoServer.stop();
       console.log('✅ MongoDB Memory Server stopped');
     }
     
@@ -99,7 +79,7 @@ afterAll(async () => {
   } catch (error) {
     console.error('❌ Test cleanup error:', error);
     
-    // Force cleanup without exiting (let Jest handle it)
+    // Force cleanup
     try {
       if (mongoose.connection.readyState !== 0) {
         await mongoose.disconnect();
