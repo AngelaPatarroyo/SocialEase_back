@@ -45,9 +45,14 @@ class AuthService {
    * Login and return token + user data
    */
   async login({ email, password }) {
-    // Find user by email
-    const user = await UserRepository.findByEmail(email);
+    // Find user by email with password
+    const user = await UserRepository.findByEmailWithPassword(email);
     if (!user) throw new AppError('Invalid credentials', 401);
+
+    // Check if user has a password (Google users might not have one)
+    if (!user.password) {
+      throw new AppError('This account was created with Google. Please use Google Sign-In or set a password in your profile.', 401);
+    }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
@@ -55,20 +60,25 @@ class AuthService {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id.toString(), role: user.role }, // ✅ Ensure `id` is in payload
+      { id: user._id.toString(), role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' } // Token valid for 1 day
+      { expiresIn: '7d' } // Token valid for 7 days to match controller
     );
 
     // Return token + safe user data
     return {
-      success: true,
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        avatar: user.avatar,
+        theme: user.theme,
+        xp: user.xp,
+        level: user.level,
+        streak: user.streak,
+        badges: user.badges
       }
     };
   }

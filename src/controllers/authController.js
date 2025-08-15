@@ -37,44 +37,16 @@ const AuthController = {
       console.log('[AuthController] Login request received');
       const { email, password } = req.body;
 
-      console.log('[AuthController] Searching for user:', email);
-      const user = await User.findOne({ email }).select('+password');
-
-      if (!user) {
-        console.log('[AuthController] No user with email:', email);
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-              console.log('[AuthController] User found, checking password');
-      // Check if user has a password (Google users might not have one)
-      if (!user.password) {
-                  console.log('[AuthController] Google user without password');
-        return res.status(401).json({ 
-          message: 'This account was created with Google. Please use Google Sign-In or set a password in your profile.' 
-        });
-      }
-
-              console.log('[AuthController] Checking password match');
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-                  console.log('[AuthController] Password mismatch');
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-              console.log('[AuthController] Password correct, generating token');
-      const token = jwt.sign(
-        { id: user._id.toString(), role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-
-      const userWithoutPassword = user.toObject();
-      delete userWithoutPassword.password;
-
-              console.log('[AuthController] Login successful');
-      return res.status(200).json({ token, user: userWithoutPassword }); //  return both
+      // Delegate login logic to authService
+      const result = await authService.login({ email, password });
+      
+      console.log('[AuthController] Login successful');
+      return res.status(200).json(result);
     } catch (err) {
       console.error('❌ [AuthController] Login error:', err);
+      if (err.statusCode) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
       next(err);
     }
   },

@@ -3,6 +3,21 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-key';
 process.env.PORT = 4001;
 
+// Increase timeout for MongoDB operations
+jest.setTimeout(30000);
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
 // Global test utilities
 global.testUtils = {
   // Helper to create mock user data

@@ -7,28 +7,57 @@ let app;
 
 // Mock the server app for testing
 beforeAll(async () => {
-  // Start in-memory MongoDB for testing
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  
-  // Set test environment
-  process.env.MONGO_URI = mongoUri;
-  process.env.JWT_SECRET = 'test-secret-key';
-  
-  // Import app after setting environment
-  app = require('../server');
-  
-  // Wait for MongoDB connection
-  await mongoose.connect(mongoUri);
+  try {
+    // Start in-memory MongoDB for testing
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    
+    // Set test environment
+    process.env.MONGO_URI = mongoUri;
+    process.env.JWT_SECRET = 'test-secret-key';
+    
+    // Import app after setting environment
+    app = require('../server');
+    
+    // Wait for MongoDB connection with timeout
+    await Promise.race([
+      mongoose.connect(mongoUri),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('MongoDB connection timeout')), 10000)
+      )
+    ]);
+    
+    console.log('✅ MongoDB connected for testing');
+  } catch (error) {
+    console.error('❌ Failed to setup test environment:', error);
+    throw error;
+  }
 });
 
 afterAll(async () => {
-  // Cleanup
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.disconnect();
-  }
-  if (mongoServer) {
-    await mongoServer.stop();
+  try {
+    // Cleanup with timeout
+    if (mongoose.connection.readyState !== 0) {
+      await Promise.race([
+        mongoose.disconnect(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('MongoDB disconnect timeout')), 5000)
+        )
+      ]);
+    }
+    if (mongoServer) {
+      await Promise.race([
+        mongoServer.stop(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('MongoDB server stop timeout')), 5000)
+        )
+      ]);
+    }
+    console.log('✅ Test cleanup completed');
+  } catch (error) {
+    console.error('❌ Test cleanup error:', error);
+    // Force exit if cleanup fails
+    process.exit(0);
   }
 });
 
