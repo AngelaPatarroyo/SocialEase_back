@@ -35,7 +35,6 @@ router.get('/signature', (req, res) => {
       api_key: apiKey,
     });
   } catch (err) {
-    console.error('❌ Signature generation failed:', err.message);
     res.status(500).json({ message: 'Signature generation failed' });
   }
 });

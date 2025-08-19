@@ -73,29 +73,19 @@ class AdminService {
 
   async getAllFeedback() {
     try {
-      console.log('🔍 [AdminService] getAllFeedback called');
       const feedback = await FeedbackRepository.findAll();
-      console.log('📊 [AdminService] Feedback from repository:', {
-        type: typeof feedback,
-        isArray: Array.isArray(feedback),
-        length: feedback ? feedback.length : 'null/undefined'
-      });
       return feedback;
     } catch (error) {
-      console.error('❌ [AdminService] Error in getAllFeedback:', error);
-      throw error;
+      throw new AppError('Failed to fetch feedback', 500);
     }
   }
 
   async deleteFeedback(feedbackId) {
     try {
-      console.log('🗑️ [AdminService] deleteFeedback called with ID:', feedbackId);
-      const result = await FeedbackRepository.deleteById(feedbackId);
-      console.log('✅ [AdminService] Feedback deleted successfully:', { feedbackId, result: !!result });
+      const result = await FeedbackRepository.delete(feedbackId);
       return result;
     } catch (error) {
-      console.error('❌ [AdminService] Error deleting feedback:', error);
-      throw error;
+      throw new AppError('Failed to delete feedback', 500);
     }
   }
 

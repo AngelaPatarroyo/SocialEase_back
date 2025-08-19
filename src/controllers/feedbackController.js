@@ -37,28 +37,34 @@ class FeedbackController {
       });
       if (!feedback) return next(new AppError('Failed to submit feedback', 500));
 
-      // 🎯 Award XP based on the scenario's points (fallback to config if missing)
+      // Calculate XP award
       const scenario = await ScenarioRepository.findById(scenarioObjectId);
-      const award = Number(scenario?.points ?? xpRewards?.scenarioCompletion ?? 0);
-      
-      console.log(`[FeedbackController] Scenario: ${scenario?.title || scenarioObjectId}`);
-      console.log(`[FeedbackController] Scenario Points: ${scenario?.points}, Fallback: ${xpRewards?.scenarioCompletion}, Final Award: ${award}`);
+      const xpRewards = require('../config/xpRewards');
+      const award = scenario?.points || xpRewards?.scenarioCompletion || 0;
       
       if (award > 0) {
+        // Award XP to user
         const updatedUser = await addXP(userId, award);
-        console.log(`[FeedbackController] User earned ${award} XP. Total: ${updatedUser.xp}`);
+        
+        res.status(200).json({
+          success: true,
+          message: 'Feedback submitted successfully',
+          data: {
+            feedback: feedback,
+            xpEarned: award,
+            totalXp: updatedUser.xp
+          }
+        });
       } else {
-        console.log(`[FeedbackController] No XP earned - scenario worth 0 points`);
+        res.status(200).json({
+          success: true,
+          message: 'Feedback submitted successfully',
+          data: { feedback: feedback }
+        });
       }
 
-      return res.status(201).json({
-        success: true,
-        message: `Feedback submitted. +${award} XP.`,
-        data: feedback,
-      });
     } catch (err) {
-      console.error('[FeedbackController.submit] Error:', err);
-      next(new AppError(err.message || 'Feedback submission error', 500));
+      next(err);
     }
   }
 

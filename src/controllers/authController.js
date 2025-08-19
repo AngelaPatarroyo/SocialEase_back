@@ -34,20 +34,39 @@ const AuthController = {
 
   async login(req, res, next) {
     try {
-      console.log('[AuthController] Login request received');
       const { email, password } = req.body;
 
-      // Delegate login logic to authService
-      const result = await authService.login({ email, password });
-      
-      console.log('[AuthController] Login successful');
-      return res.status(200).json(result);
-    } catch (err) {
-      console.error('❌ [AuthController] Login error:', err);
-      if (err.statusCode) {
-        return res.status(err.statusCode).json({ message: err.message });
+      const user = await User.findOne({ email }).select('+password');
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'Invalid credentials' });
       }
-      next(err);
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      }
+
+      const token = jwt.sign(
+        { id: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        data: {
+          token,
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+          }
+        }
+      });
+    } catch (error) {
+      next(error);
     }
   },
 
@@ -58,10 +77,8 @@ const AuthController = {
   async googleOAuth(req, res) {
     try {
       const { mode } = req.query;
-      console.log(`[GoogleOAuth] Initiating ${mode} flow`);
       
       if (!mode || !['login', 'register'].includes(mode)) {
-        console.error(`[GoogleOAuth] Invalid mode: ${mode}`);
         return res.status(400).json({ message: 'Invalid mode. Use ?mode=login or ?mode=register' });
       }
 
@@ -72,10 +89,8 @@ const AuthController = {
         state: mode,
       });
 
-      console.log(`[GoogleOAuth] Redirecting to Google OAuth for ${mode}`);
       return res.redirect(url);
     } catch (error) {
-      console.error('Google OAuth Redirect Error:', error);
       return res.status(500).json({ message: 'Failed to initiate Google login.' });
     }
   },
@@ -83,7 +98,6 @@ const AuthController = {
   async googleCallback(req, res, next) {
     try {
       const { code, state: mode } = req.query;
-      console.log(`[GoogleOAuth] Callback received for mode: ${mode}`);
       
       if (!code) throw new AppError('Authorization code is missing', 400);
       if (!mode || !['login', 'register'].includes(mode)) {
@@ -134,7 +148,6 @@ const AuthController = {
 
       return res.redirect(`${process.env.FRONTEND_URL}/google-success?token=${token}`);
     } catch (error) {
-      console.error('Google OAuth Callback Error:', error);
       return next(error);
     }
   },

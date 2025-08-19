@@ -27,12 +27,6 @@ exports.authMiddleware = (req, res, next) => {
       role: payload.role  // Extract role for admin middleware
     };
     
-    // Log user info for debugging (remove in production)
-    console.log(`🔐 [AuthMiddleware] User authenticated:`, { 
-      id: req.user.id, 
-      role: req.user.role 
-    });
-    
     if (!req.user.id) {
       return next(new AppError('Token payload missing user id', 403));
     }

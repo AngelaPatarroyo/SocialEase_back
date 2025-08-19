@@ -29,8 +29,7 @@ function cleanOldBadges(user) {
   const cleanedBadges = user.badges.filter(badge => VALID_BADGES.has(badge));
 
   if (oldBadges.length > 0) {
-    console.log(`[BadgeManager] Cleaning old badges for user ${user._id}: ${oldBadges.join(', ')}`);
-          console.log(`[BadgeManager] Kept valid badges: ${cleanedBadges.join(', ')}`);
+    user.badges = cleanedBadges;
   }
 
   return { oldBadges, cleanedBadges };
@@ -40,10 +39,6 @@ async function checkAchievements(user) {
   const current = new Set((user.badges || []).map(normalizeKey));
   const newBadges = [];
   
-  console.log(`[BadgeManager] Checking achievements for user ${user._id || 'unknown'}`);
-  console.log(`[BadgeManager] Current XP: ${user.xp || 0}, Level: ${user.level || 1}, Streak: ${user.streak || 0}`);
-  console.log(`[BadgeManager] Current badges: ${(user.badges || []).join(', ')}`);
-
   // Streak-based badges
   if ((user.streak || 0) >= 5 && !current.has('streak_master')) {
     newBadges.push('Streak Master');
@@ -95,12 +90,6 @@ async function checkAchievements(user) {
     newBadges.push('First Steps');
   }
 
-  if (newBadges.length > 0) {
-    console.log(`[BadgeManager] New badges: ${newBadges.join(', ')}`);
-      } else {
-      console.log(`[BadgeManager] User already has all badges`);
-    }
-  
   return newBadges;
 }
 
@@ -147,35 +136,28 @@ async function cleanAllUsersBadges(UserModel) {
         await UserModel.findByIdAndUpdate(user._id, { badges: cleanedBadges });
         totalCleaned += oldBadges.length;
         totalUsers++;
-        console.log(`[BadgeManager] Cleaned user ${user._id}: ${oldBadges.join(', ')}`);
       }
     }
 
-    console.log(`[BadgeManager] Cleanup done: ${totalCleaned} old badges removed from ${totalUsers} users`);
     return { totalCleaned, totalUsers };
   } catch (error) {
-    console.error('[BadgeManager] ❌ Error cleaning all users badges:', error);
-    throw error;
+    throw new Error(`Failed to clean all users badges: ${error.message}`);
   }
 }
 
 // Force cleanup for a specific user - more aggressive approach
 async function forceCleanUserBadges(UserModel, userId) {
   try {
-    console.log(`[BadgeManager] Starting cleanup for user ${userId}`);
     
     if (!UserModel || !userId) {
-      console.error('[BadgeManager] Invalid parameters for forceCleanUserBadges');
-      return { oldBadges: [], validBadges: [], cleaned: false };
+      throw new Error('Invalid parameters for forceCleanUserBadges');
     }
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      console.log(`[BadgeManager] User ${userId} not found for badge cleanup`);
       return { oldBadges: [], validBadges: [], cleaned: false };
     }
 
-          console.log(`[BadgeManager] User ${userId} badges: ${(user.badges || []).join(', ')}`);
     
     // Define what we consider old/invalid badges
     const OLD_BADGE_PATTERNS = [
@@ -191,61 +173,51 @@ async function forceCleanUserBadges(UserModel, userId) {
     );
 
     if (oldBadges.length > 0) {
-      console.log(`[BadgeManager] Removing old badges: ${oldBadges.join(', ')}`);
-      console.log(`[BadgeManager] Valid badges remain: ${validBadges.join(', ')}`);
-      
       try {
         await UserModel.findByIdAndUpdate(userId, { badges: validBadges });
-        console.log(`[BadgeManager] User ${userId} badges updated in database`);
         return { oldBadges, validBadges, cleaned: true };
       } catch (dbError) {
-        console.error(`[BadgeManager] Failed to update user ${userId} badges:`, dbError);
-        return { oldBadges, validBadges, cleaned: false };
+        throw new Error(`Failed to update user ${userId} badges: ${dbError.message}`);
       }
     }
 
-    console.log(`[BadgeManager] User ${userId} has no old badges`);
     return { oldBadges: [], validBadges: user.badges || [], cleaned: false };
   } catch (error) {
-    console.error('[BadgeManager] Error force cleaning user badges:', error);
-    // Return safe defaults instead of throwing
-    return { oldBadges: [], validBadges: [], cleaned: false };
+    throw new Error(`Error force cleaning user badges: ${error.message}`);
   }
 }
 
 // Remove specific badges from a user
 async function removeSpecificBadges(UserModel, userId, badgesToRemove) {
   try {
-    console.log(`[BadgeManager] Removing badges for user ${userId}: ${badgesToRemove.join(', ')}`);
     
     if (!UserModel || !userId || !badgesToRemove || !Array.isArray(badgesToRemove)) {
-      console.error('[BadgeManager] Invalid parameters for removeSpecificBadges');
-      return { success: false, message: 'Invalid parameters' };
+      throw new Error('Invalid parameters for removeSpecificBadges');
     }
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      console.log(`[BadgeManager] User ${userId} not found for badge removal`);
       return { success: false, message: 'User not found' };
     }
 
     const currentBadges = user.badges || [];
-    const badgesToRemoveSet = new Set(badgesToRemove);
+    const removedBadges = [];
+    const remainingBadges = [];
     
-    const removedBadges = currentBadges.filter(badge => badgesToRemoveSet.has(badge));
-    const remainingBadges = currentBadges.filter(badge => !badgesToRemoveSet.has(badge));
+    currentBadges.forEach(badge => {
+      if (badgesToRemove.includes(badge)) {
+        removedBadges.push(badge);
+      } else {
+        remainingBadges.push(badge);
+      }
+    });
 
     if (removedBadges.length === 0) {
-      console.log(`[BadgeManager] User ${userId} has no badges to remove`);
       return { success: true, message: 'No badges to remove', removedBadges: [], remainingBadges };
     }
 
-    console.log(`[BadgeManager] Badges to remove: ${removedBadges.join(', ')}`);
-    console.log(`[BadgeManager] Remaining badges: ${remainingBadges.join(', ')}`);
-
     try {
       await UserModel.findByIdAndUpdate(userId, { badges: remainingBadges });
-      console.log(`[BadgeManager] Removed badges for user ${userId}`);
       return { 
         success: true, 
         message: 'Badges removed successfully',
@@ -253,12 +225,10 @@ async function removeSpecificBadges(UserModel, userId, badgesToRemove) {
         remainingBadges
       };
     } catch (dbError) {
-      console.error(`[BadgeManager] Failed to update user ${userId} badges:`, dbError);
-      return { success: false, message: 'Database update failed', error: dbError.message };
+      throw new Error(`Failed to update user ${userId} badges: ${dbError.message}`);
     }
   } catch (error) {
-    console.error('[BadgeManager] ❌ Error removing specific badges:', error);
-    return { success: false, message: 'Internal error', error: error.message };
+    throw new Error(`Error removing specific badges: ${error.message}`);
   }
 }
 

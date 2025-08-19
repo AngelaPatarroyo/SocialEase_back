@@ -22,32 +22,21 @@ class FeedbackService {
    * Persist feedback.
    * XP is handled in the controller (once).
    */
-  async submitFeedback({ userId, scenarioId, reflection, rating }) {
+  async submitFeedback(feedbackData) {
     try {
-      const scenarioObjectId = await resolveScenarioObjectId(scenarioId);
-
-      const feedback = await FeedbackRepository.create({
-        userId,
-        scenarioId: scenarioObjectId,
-        reflection,
-        rating,
-      });
-
+      const feedback = await FeedbackRepository.create(feedbackData);
       return feedback;
     } catch (err) {
-      console.error('[FeedbackService.submitFeedback] Error:', err);
-      // propagate specific 400 from invalid slug/id, otherwise 500
-      if (err?.statusCode) throw err;
-      throw new AppError('Could not save feedback', 500);
+      throw new AppError('Failed to submit feedback', 500);
     }
   }
 
   async getUserFeedback(userId) {
     try {
-      return await FeedbackRepository.findByUserId(userId);
+      const feedback = await FeedbackRepository.findByUserId(userId);
+      return feedback;
     } catch (err) {
-      console.error('[FeedbackService.getUserFeedback] Error:', err);
-      throw new AppError('Could not fetch feedback', 500);
+      throw new AppError('Failed to fetch user feedback', 500);
     }
   }
 }

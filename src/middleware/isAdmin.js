@@ -1,15 +1,10 @@
-module.exports = function (req, res, next) {
-  console.log(`🔒 [AdminMiddleware] Checking admin access for user:`, {
-    id: req.user.id,
-    role: req.user.role,
-    isAdmin: req.user.role === 'admin'
-  });
-  
-  if (req.user.role !== 'admin') {
-      console.log(`❌ [AdminMiddleware] Access denied for user ${req.user.id} with role ${req.user.role}`);
-      return res.status(403).json({ message: 'Access denied: Admin only' });
+const AppError = require('../utils/errors');
+
+const isAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return next(new AppError('Admin access required', 403));
   }
-  
-  console.log(`✅ [AdminMiddleware] Admin access granted for user ${req.user.id}`);
   next();
 };
+
+module.exports = isAdmin;

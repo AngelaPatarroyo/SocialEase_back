@@ -12,26 +12,12 @@ class ProgressService {
    * Marks scenario complete (slug or ObjectId) and handles achievements.
    * XP gets awarded when user submits feedback, this just tracks completion.
    */
-  async updateProgress(userId, scenarioIdOrSlug) {
+  async updateProgress(userId, scenarioId, progressData) {
     try {
-      const scenarioId = await resolveScenarioObjectId(scenarioIdOrSlug);
-
-      const [user, scenario] = await Promise.all([
-        UserRepository.findById(userId),
-        ScenarioRepository.findById(scenarioId),
-      ]);
-      if (!user) throw new AppError('User not found', 404);
-      if (!scenario) throw new AppError('Scenario not found', 404);
-
-      const updatedProgress = await ProgressRepository.addScenario(userId, scenarioId);
-
-      // Ensure user data is refreshed after progress update
-      await UserRepository.findById(userId);
-
-      return updatedProgress;
+      const progress = await ProgressRepository.updateProgress(userId, scenarioId, progressData);
+      return progress;
     } catch (err) {
-      console.error('[ProgressService.updateProgress] Error:', err);
-      throw new AppError(err?.message || 'Could not update progress', err?.statusCode || 500);
+      throw new AppError('Failed to update progress', 500);
     }
   }
 

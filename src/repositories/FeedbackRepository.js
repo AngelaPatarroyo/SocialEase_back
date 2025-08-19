@@ -75,49 +75,23 @@ module.exports = {
 
   async findAll() {
     try {
-      // First, ensure models are loaded
-      const User = require('../models/User');
-      const Scenario = require('../models/Scenario');
-      
-      console.log('🔍 [FeedbackRepository] Starting findAll with populate...');
-      
       const feedback = await Feedback.find()
-        .sort({ createdAt: -1 })
         .populate('userId', 'name email')
-        .populate('scenarioId', 'title slug');
-        
-      console.log('🔍 [FeedbackRepository] Found feedback:', {
-        count: feedback.length,
-        type: typeof feedback,
-        isArray: Array.isArray(feedback)
-      });
-      
-      // Log a sample of the populated data
-      if (feedback && feedback.length > 0) {
-        const sample = feedback[0];
-        console.log('📊 [FeedbackRepository] Sample populated data:', {
-          userId: sample.userId,
-          scenarioId: sample.scenarioId,
-          reflection: sample.reflection?.substring(0, 50) + '...',
-          rating: sample.rating
-        });
-      }
+        .populate('scenarioId', 'title category difficulty')
+        .sort({ createdAt: -1 });
       
       return feedback;
     } catch (error) {
-      console.error('❌ [FeedbackRepository] Error in findAll:', error);
-      throw error;
+      throw new Error(`Failed to fetch feedback: ${error.message}`);
     }
   },
 
   async deleteById(id) {
     try {
       const result = await Feedback.findByIdAndDelete(id);
-      console.log('🗑️ [FeedbackRepository] Deleted feedback:', { id, result: !!result });
       return result;
     } catch (error) {
-      console.error('❌ [FeedbackRepository] Error deleting feedback:', error);
-      throw error;
+      throw new Error(`Failed to delete feedback: ${error.message}`);
     }
   },
 };

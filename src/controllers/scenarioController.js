@@ -173,9 +173,8 @@ class ScenarioController {
 
       const saved = await ScenarioService.savePreparationData(data);
       return res.status(201).json({ success: true, message: 'Preparation saved', data: saved });
-    } catch (err) {
-      console.error('❌ Error in savePreparation:', err.message);
-      return res.status(500).json({ success: false, message: 'Failed to save preparation data', error: err.message });
+    } catch (error) {
+      next(error);
     }
   }
 }

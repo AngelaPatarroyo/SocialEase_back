@@ -17,4 +17,19 @@ const selfAssessmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Add additional database indexes for better query performance
+selfAssessmentSchema.index({ confidenceBefore: -1 }); // For confidence level queries
+selfAssessmentSchema.index({ confidenceAfter: -1 }); // For confidence improvement tracking
+selfAssessmentSchema.index({ socialLevel: 1 }); // For social level filtering
+selfAssessmentSchema.index({ socialFrequency: 1 }); // For frequency-based queries
+selfAssessmentSchema.index({ communicationConfidence: -1 }); // For confidence sorting
+selfAssessmentSchema.index({ createdAt: -1 }); // For recent assessments
+selfAssessmentSchema.index({ updatedAt: -1 }); // For assessment modifications
+
+// Compound indexes for complex queries
+selfAssessmentSchema.index({ userId: 1, createdAt: -1 }); // User assessments over time
+selfAssessmentSchema.index({ socialLevel: 1, confidenceAfter: -1 }); // Level + confidence
+selfAssessmentSchema.index({ socialFrequency: 1, communicationConfidence: -1 }); // Frequency + confidence
+selfAssessmentSchema.index({ confidenceBefore: -1, confidenceAfter: -1 }); // Confidence improvement
+
 module.exports = mongoose.model('SelfAssessment', selfAssessmentSchema);

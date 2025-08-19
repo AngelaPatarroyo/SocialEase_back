@@ -123,6 +123,31 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Database index monitoring endpoint (development only)
+if (process.env.NODE_ENV === 'development') {
+  app.get('/api/debug/indexes', async (req, res) => {
+    try {
+      const IndexManager = require('./src/utils/indexManager');
+      const stats = await IndexManager.getAllIndexStats();
+      const validation = await IndexManager.validateCriticalIndexes();
+      
+      res.status(200).json({
+        success: true,
+        data: {
+          indexStats: stats,
+          criticalIndexValidation: validation
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get index information',
+        error: error.message
+      });
+    }
+  });
+}
+
 // Simple auth test endpoint
 app.get('/auth-test', (req, res) => {
   res.status(200).json({

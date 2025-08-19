@@ -115,20 +115,19 @@ class SelfAssessmentService {
       const reward = Number.isFinite(xpRewards?.selfAssessment) ? xpRewards.selfAssessment : 10;
       const { xp, level } = await updateUserGamification(userId, reward, session);
 
-      // Award self-assessment completion badge
+      // Award badges for completing assessment
       const user = await User.findById(userId).session(session);
       if (user) {
         // Mark user as having completed self-assessment
         user.hasCompletedSelfAssessment = true;
         user.selfAssessmentCompletedAt = new Date();
         
-        const newBadges = await badgeManager.checkAchievements(user);
+        const newBadges = await badgeManager.checkForNewBadges(userId);
         if (newBadges.length > 0) {
-          user.badges = Array.from(new Set([...(user.badges || []), ...newBadges]));
-          console.log(`[SelfAssessmentService] Awarded badges: ${newBadges.join(', ')}`);
+          user.badges = [...new Set([...user.badges, ...newBadges])];
+          await user.save({ session });
         }
         
-        await user.save({ session });
       }
 
       await session.commitTransaction();

@@ -28,13 +28,6 @@ const UserController = {
         requiresCurrentPassword: hasPassword // Only require current password if they have one
       };
       
-      console.log(`[ProfileController] User ${user.email} profile data:`, {
-        provider: user.provider,
-        hasPassword,
-        canSetPassword: profileData.canSetPassword,
-        requiresCurrentPassword: profileData.requiresCurrentPassword
-      });
-      
       res.status(200).json({ success: true, data: profileData });
     } catch (error) {
       next(error);
@@ -60,14 +53,9 @@ const UserController = {
 
   async getPasswordStatus(req, res, next) {
     try {
-              console.log(`[PasswordStatusController] Checking user ID: ${req.user.id}`);
-      
       const user = await User.findById(req.user.id).select('provider password email');
       
-              console.log(`[PasswordStatusController] User lookup:`, user ? 'Found' : 'Not found');
-      
       if (!user) {
-        console.log(`[PasswordStatusController] No user found for ID: ${req.user.id}`);
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
@@ -81,28 +69,20 @@ const UserController = {
         requiresCurrentPassword: hasPassword // Only require current password if they have one
       };
       
-      console.log(`[PasswordStatusController] User ${user.email} password status:`, passwordStatus);
-      
       res.status(200).json({
         success: true,
         data: passwordStatus
       });
     } catch (error) {
-      console.error('❌ Error getting password status:', error.message);
       next(error);
     }
   },
 
   async updatePassword(req, res, next) {
     try {
-              console.log(`[PasswordController] Password update request for user ID: ${req.user.id}`);
-              console.log(`[PasswordController] Password update request:`, { currentPassword: !!req.body.currentPassword, newPassword: !!req.body.newPassword });
-      
       const { currentPassword, newPassword } = req.body;
-      const user = await User.findById(req.user.id).select('+password provider email');
-
-              console.log(`[PasswordController] User found:`, user ? `${user.email} (${user.provider})` : 'Not found');
-
+      
+      const user = await User.findById(req.user.id).select('+password');
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
@@ -116,14 +96,12 @@ const UserController = {
       }
 
       const isGoogleUserWithoutPassword = user.provider === 'google' && !user.password;
-                console.log(`[PasswordController] Google user needs password setup: ${isGoogleUserWithoutPassword}`);
 
       if (isGoogleUserWithoutPassword) {
         // Google user setting password for the first time
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
         
-                  console.log(`[PasswordController] Google user ${user.email} created first password`);
       } else if (user.provider === 'google' && user.password) {
         // Google user updating existing password
         if (currentPassword) {
@@ -147,7 +125,6 @@ const UserController = {
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
         
-                  console.log(`[PasswordController] Google user ${user.email} changed password`);
       } else {
         // Local user updating password
         if (!currentPassword) {
@@ -176,7 +153,6 @@ const UserController = {
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
         
-                  console.log(`[PasswordController] Local user ${user.email} changed password`);
       }
 
       const token = jwt.sign(
@@ -203,7 +179,6 @@ const UserController = {
         user: userData,
       });
     } catch (error) {
-      console.error('❌ Error updating password:', error.message);
       next(error);
     }
   },
@@ -249,7 +224,6 @@ const UserController = {
         },
       });
     } catch (error) {
-      console.error('❌ Dashboard error:', error);
       res.status(500).json({ success: false, message: 'Dashboard error' });
     }
   },
@@ -271,7 +245,6 @@ const UserController = {
         message: 'User and all related data deleted',
       });
     } catch (error) {
-      console.error('❌ Error deleting account:', error);
       return res.status(500).json({
         success: false,
         message: 'Failed to delete account. Please try again.',
@@ -293,7 +266,6 @@ const UserController = {
       
       if (cleaned) {
         user.badges = validBadges;
-        console.log(`[UserController] Cleaned old badges for user ${user._id}: ${oldBadges.join(', ')}`);
       }
 
       // Mark which badges the user has earned
@@ -335,7 +307,6 @@ const UserController = {
         }
       });
     } catch (error) {
-      console.error('❌ Badges error:', error);
       res.status(500).json({ success: false, message: 'Failed to fetch badges' });
     }
   }
