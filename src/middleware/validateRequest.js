@@ -5,7 +5,7 @@ module.exports = (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({
       message: 'Validation failed',
-      errors: errors.array(),
+      errors: errors.array()
     });
   }
   next();

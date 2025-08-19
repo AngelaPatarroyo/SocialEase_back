@@ -1,8 +1,7 @@
 const AdminService = require('../services/adminService');
-const AppError = require('../utils/errors');
 
 class AdminController {
-  async getAllUsers(req, res, next) {
+  async getAllUsers (req, res, next) {
     try {
       const users = await AdminService.getAllUsers();
       res.status(200).json(users);
@@ -11,7 +10,7 @@ class AdminController {
     }
   }
 
-  async createUser(req, res, next) {
+  async createUser (req, res, next) {
     try {
       const user = await AdminService.createUser(req.body);
       res.status(201).json({
@@ -24,7 +23,7 @@ class AdminController {
     }
   }
 
-  async updateUserRole(req, res, next) {
+  async updateUserRole (req, res, next) {
     try {
       const user = await AdminService.updateUserRole(req.params.id, req.body.role);
       res.status(200).json({ message: 'User role updated successfully', user });
@@ -33,7 +32,7 @@ class AdminController {
     }
   }
 
-  async deleteUser(req, res, next) {
+  async deleteUser (req, res, next) {
     try {
       await AdminService.deleteUser(req.params.id);
       res.status(200).json({ message: 'User deleted successfully' });
@@ -42,7 +41,7 @@ class AdminController {
     }
   }
 
-  async getAnalytics(req, res, next) {
+  async getAnalytics (req, res, next) {
     try {
       const analytics = await AdminService.getAnalytics();
       res.status(200).json(analytics);
@@ -51,10 +50,10 @@ class AdminController {
     }
   }
 
-  async getAllFeedback(req, res, next) {
+  async getAllFeedback (req, res, next) {
     try {
       const feedback = await AdminService.getAllFeedback();
-      
+
       res.status(200).json({
         success: true,
         data: feedback
@@ -64,12 +63,12 @@ class AdminController {
     }
   }
 
-  async deleteFeedback(req, res, next) {
+  async deleteFeedback (req, res, next) {
     try {
       const { id } = req.params;
-      
+
       const result = await AdminService.deleteFeedback(id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Feedback deleted successfully',
@@ -80,7 +79,7 @@ class AdminController {
     }
   }
 
-  async cleanupBadges(req, res, next) {
+  async cleanupBadges (req, res, next) {
     try {
       const result = await AdminService.cleanupBadges();
       res.status(200).json({
@@ -93,7 +92,7 @@ class AdminController {
     }
   }
 
-  async cleanupUserBadges(req, res, next) {
+  async cleanupUserBadges (req, res, next) {
     try {
       const result = await AdminService.cleanupUserBadges(req.params.userId);
       res.status(200).json({
@@ -106,7 +105,7 @@ class AdminController {
     }
   }
 
-  async removeUserBadges(req, res, next) {
+  async removeUserBadges (req, res, next) {
     try {
       const result = await AdminService.removeUserBadges(req.params.userId, req.body.badges);
       res.status(200).json({

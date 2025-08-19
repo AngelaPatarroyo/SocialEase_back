@@ -6,42 +6,42 @@ class ScenarioService {
   /** ------------------------
    *   GET ALL SCENARIOS
    * ------------------------ */
-  async getAllScenarios() {
+  async getAllScenarios () {
     return Scenario.find().sort({ createdAt: -1 });
   }
 
   /** ------------------------
    *   GET SCENARIO BY ID
    * ------------------------ */
-  async getScenarioById(id) {
+  async getScenarioById (id) {
     return Scenario.findById(id);
   }
 
   /** ------------------------
    *   CREATE SCENARIO
    * ------------------------ */
-  async createScenario(data) {
+  async createScenario (data) {
     return Scenario.create(data);
   }
 
   /** ------------------------
    *   UPDATE SCENARIO
    * ------------------------ */
-  async updateScenario(id, data) {
+  async updateScenario (id, data) {
     return Scenario.findByIdAndUpdate(id, data, { new: true });
   }
 
   /** ------------------------
    *   DELETE SCENARIO
    * ------------------------ */
-  async deleteScenario(id) {
+  async deleteScenario (id) {
     return Scenario.findByIdAndDelete(id);
   }
 
   /** ------------------------
    *   COMPLETE SCENARIO
    * ------------------------ */
-  async completeScenario(userId, scenarioId) {
+  async completeScenario (userId, scenarioId) {
     const existing = await Progress.findOne({ user: userId, scenario: scenarioId });
 
     if (existing) {
@@ -55,7 +55,7 @@ class ScenarioService {
   /** ------------------------
    *   GET ADAPTIVE SCENARIO
    * ------------------------ */
-  async getAdaptiveScenario(userId) {
+  async getAdaptiveScenario (userId) {
     const completedIds = await Progress.find({ user: userId }).distinct('scenario');
     const next = await Scenario.findOne({ _id: { $nin: completedIds } }).sort({ createdAt: 1 });
     return next;
@@ -64,31 +64,31 @@ class ScenarioService {
   /** ------------------------
    *   REPLAY SCENARIO
    * ------------------------ */
-  async replayScenario(userId, scenarioId) {
+  async replayScenario (userId, scenarioId) {
     return `User ${userId} is replaying scenario ${scenarioId}`;
   }
 
   /** ------------------------
    *   SKIP SCENARIO
    * ------------------------ */
-  async skipScenario(currentId, difficulty) {
+  async skipScenario (currentId, difficulty) {
     return Scenario.findOne({
       _id: { $ne: currentId },
-      difficulty: difficulty
+      difficulty
     }).sort({ createdAt: -1 });
   }
 
   /** ------------------------
    *   GET VR SCENARIOS
    * ------------------------ */
-  async getVRScenarios() {
+  async getVRScenarios () {
     return Scenario.find({ vrSupported: true });
   }
 
   /** ------------------------
    *   SAVE SCENARIO PREPARATION
    * ------------------------ */
-  async savePreparationData(data) {
+  async savePreparationData (data) {
     return ScenarioPreparation.create(data);
   }
 }

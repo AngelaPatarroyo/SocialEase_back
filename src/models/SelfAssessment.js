@@ -12,7 +12,7 @@ const selfAssessmentSchema = new mongoose.Schema(
     anxietyTriggers: [{ type: String, required: true }],
     socialFrequency: { type: String, enum: ['rarely', 'sometimes', 'often', 'daily'], required: true },
     communicationConfidence: { type: Number, min: 0, max: 10, required: true },
-    socialLevel: { type: String, enum: ['beginner', 'developing', 'confident', 'advanced'], required: true },
+    socialLevel: { type: String, enum: ['beginner', 'developing', 'confident', 'advanced'], required: true }
   },
   { timestamps: true }
 );

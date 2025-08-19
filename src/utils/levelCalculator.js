@@ -1,10 +1,9 @@
-
 'use strict';
 
 const BASE = 100;
 const GROWTH = 1.25;
 
-function calculateLevel(totalXp = 0) {
+function calculateLevel (totalXp = 0) {
   let level = 1;
   let req = BASE;
   let remaining = totalXp;
@@ -17,7 +16,7 @@ function calculateLevel(totalXp = 0) {
   return level;
 }
 
-function getLevelProgress(totalXp = 0) {
+function getLevelProgress (totalXp = 0) {
   let level = 1;
   let req = BASE;
   let remaining = totalXp;
@@ -31,7 +30,7 @@ function getLevelProgress(totalXp = 0) {
     level,
     xpIntoLevel: remaining,
     xpToNextLevel: req,
-    progressPct: Math.round((remaining / req) * 100),
+    progressPct: Math.round((remaining / req) * 100)
   };
 }
 

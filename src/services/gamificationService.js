@@ -14,7 +14,7 @@ const thresholdFn = buildLinear(100);
  * @param {import('mongoose').ClientSession|null} session
  * @returns {Promise<{ xp:number, level:number, newBadges:string[] }>}
  */
-async function updateUserGamification(userId, xpEarned = 0, session = null) {
+async function updateUserGamification (userId, xpEarned = 0, session = null) {
   const query = session ? User.findById(userId).session(session) : User.findById(userId);
   const user = await query;
   if (!user) throw new Error('User not found');
@@ -50,13 +50,13 @@ async function updateUserGamification(userId, xpEarned = 0, session = null) {
 
   // Badges
   const newBadges = await badgeManager.checkAchievements(user) || [];
-  
+
   // Clean up any old badges first
   const { oldBadges, cleanedBadges } = badgeManager.cleanOldBadges(user);
   if (oldBadges.length > 0) {
     user.badges = cleanedBadges;
   }
-  
+
   // Combine cleaned badges with new badges
   user.badges = Array.from(new Set([...cleanedBadges, ...newBadges]));
 

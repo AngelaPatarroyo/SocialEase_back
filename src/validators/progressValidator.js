@@ -17,9 +17,9 @@ exports.updateProgressValidation = [
   body('status')
     .optional()
     .isIn(['completed', 'in-progress'])
-    .withMessage('status must be completed or in-progress'),
+    .withMessage('status must be completed or in-progress')
 ];
 
 exports.paramUserIdValidation = [
-  param('userId').isMongoId().withMessage('Invalid user ID'),
+  param('userId').isMongoId().withMessage('Invalid user ID')
 ];

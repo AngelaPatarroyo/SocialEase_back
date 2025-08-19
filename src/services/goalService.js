@@ -3,7 +3,7 @@ const User = require('../models/User');
 const AppError = require('../utils/errors');
 
 class GoalService {
-  async createGoal(userId, { title, target, deadline, reminder }) {
+  async createGoal (userId, { title, target, deadline, reminder }) {
     const user = await User.findById(userId);
     if (!user) throw new AppError('User not found', 404);
     user.goals.push({ title, target, deadline, reminder, progress: 0, completed: false });
@@ -11,13 +11,13 @@ class GoalService {
     return user.goals;
   }
 
-  async getGoals(userId) {
+  async getGoals (userId) {
     const user = await User.findById(userId);
     if (!user) throw new AppError('User not found', 404);
     return user.goals;
   }
 
-  async updateGoalProgress(userId, goalId, increment = 1) {
+  async updateGoalProgress (userId, goalId, increment = 1) {
     const user = await User.findById(userId);
     if (!user) throw new AppError('User not found', 404);
 
@@ -31,7 +31,7 @@ class GoalService {
     return goal;
   }
 
-  async deleteGoal(userId, goalId) {
+  async deleteGoal (userId, goalId) {
     const user = await User.findById(userId);
     if (!user) throw new AppError('User not found', 404);
 

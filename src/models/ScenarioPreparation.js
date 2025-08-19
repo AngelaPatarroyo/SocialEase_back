@@ -9,7 +9,7 @@ const ScenarioPreparationSchema = new mongoose.Schema({
   visualization: String,
   goal: String,
   step: { type: String, default: 'preparation' },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now }
 });
 
 // Add database indexes for better query performance

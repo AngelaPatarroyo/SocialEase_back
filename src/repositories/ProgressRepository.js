@@ -1,22 +1,22 @@
 const Progress = require('../models/Progress');
 
 class ProgressRepository {
-  async findByUserId(userId, options = {}) {
+  async findByUserId (userId, options = {}) {
     const { limit, sort } = options;
     let query = Progress.find({ userId });
-    
+
     if (sort) {
       query = query.sort(sort);
     }
-    
+
     if (limit) {
       query = query.limit(limit);
     }
-    
+
     return query.exec();
   }
 
-  async countByUserId(userId) {
+  async countByUserId (userId) {
     return Progress.countDocuments({ userId });
   }
 
@@ -24,7 +24,7 @@ class ProgressRepository {
    * Add scenario to completedScenarios (no duplicates).
    * Returns the updated progress doc.
    */
-  async addScenario(userId, scenarioId) {
+  async addScenario (userId, scenarioId) {
     return Progress.findOneAndUpdate(
       { userId },
       { $addToSet: { completedScenarios: scenarioId } },
@@ -32,7 +32,7 @@ class ProgressRepository {
     );
   }
 
-  async addAchievement(userId, achievement) {
+  async addAchievement (userId, achievement) {
     return Progress.findOneAndUpdate(
       { userId },
       { $addToSet: { achievements: achievement } },
@@ -40,7 +40,7 @@ class ProgressRepository {
     );
   }
 
-  async count() {
+  async count () {
     return Progress.countDocuments();
   }
 }

@@ -14,9 +14,9 @@ exports.createFeedbackValidation = [
     .custom(isObjectIdOrSlug).withMessage('scenarioId must be an ObjectId or slug'),
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be 1–5'),
   body('reflection').isString().trim().isLength({ min: 1, max: 500 })
-    .withMessage('Reflection 1–500 chars'),
+    .withMessage('Reflection 1–500 chars')
 ];
 
 exports.paramUserIdValidation = [
-  param('userId').isMongoId().withMessage('Invalid user ID'),
+  param('userId').isMongoId().withMessage('Invalid user ID')
 ];

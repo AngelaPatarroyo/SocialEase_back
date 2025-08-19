@@ -9,7 +9,7 @@ class IndexManager {
   /**
    * Get all indexes for a specific collection
    */
-  static async getCollectionIndexes(collectionName) {
+  static async getCollectionIndexes (collectionName) {
     try {
       const collection = mongoose.connection.collection(collectionName);
       const indexes = await collection.indexes();
@@ -23,7 +23,7 @@ class IndexManager {
   /**
    * Get index statistics for all collections
    */
-  static async getAllIndexStats() {
+  static async getAllIndexStats () {
     try {
       const collections = await mongoose.connection.db.listCollections().toArray();
       const stats = {};
@@ -31,7 +31,7 @@ class IndexManager {
       for (const collection of collections) {
         const collectionName = collection.name;
         const indexes = await this.getCollectionIndexes(collectionName);
-        
+
         stats[collectionName] = {
           totalIndexes: indexes.length,
           indexes: indexes.map(index => ({
@@ -53,10 +53,10 @@ class IndexManager {
   /**
    * Check if specific indexes exist
    */
-  static async checkIndexExists(collectionName, indexKey) {
+  static async checkIndexExists (collectionName, indexKey) {
     try {
       const indexes = await this.getCollectionIndexes(collectionName);
-      return indexes.some(index => 
+      return indexes.some(index =>
         JSON.stringify(index.key) === JSON.stringify(indexKey)
       );
     } catch (error) {
@@ -68,7 +68,7 @@ class IndexManager {
   /**
    * Get index usage statistics (requires MongoDB 4.2+)
    */
-  static async getIndexUsageStats() {
+  static async getIndexUsageStats () {
     try {
       const db = mongoose.connection.db;
       const stats = await db.command({ indexStats: '*' });
@@ -82,10 +82,10 @@ class IndexManager {
   /**
    * Log index information for debugging
    */
-  static async logIndexInfo() {
+  static async logIndexInfo () {
     try {
       const stats = await this.getAllIndexStats();
-      
+
       logger.info('📊 Database Index Summary:');
       Object.entries(stats).forEach(([collection, info]) => {
         logger.info(`  ${collection}: ${info.totalIndexes} indexes`);
@@ -107,31 +107,31 @@ class IndexManager {
   /**
    * Validate critical indexes exist
    */
-  static async validateCriticalIndexes() {
+  static async validateCriticalIndexes () {
     const criticalIndexes = {
-      'users': [
+      users: [
         { email: 1 },
         { role: 1 },
         { xp: -1 }
       ],
-      'scenarios': [
+      scenarios: [
         { slug: 1 },
         { difficulty: 1 }
       ],
-      'feedback': [
+      feedback: [
         { userId: 1 },
         { scenarioId: 1 }
       ],
-      'progress': [
+      progress: [
         { userId: 1 }
       ]
     };
 
     const results = {};
-    
+
     for (const [collection, indexes] of Object.entries(criticalIndexes)) {
       results[collection] = {};
-      
+
       for (const indexKey of indexes) {
         const exists = await this.checkIndexExists(collection, indexKey);
         results[collection][JSON.stringify(indexKey)] = exists;

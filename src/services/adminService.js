@@ -6,13 +6,13 @@ const AppError = require('../utils/errors');
 const badgeManager = require('../utils/badgeManager');
 
 class AdminService {
-  async getAllUsers() {
+  async getAllUsers () {
     return await UserRepository.findAll();
   }
 
-  async createUser(userData) {
+  async createUser (userData) {
     const { name, email, password, role = 'user' } = userData;
-    
+
     // Check if user already exists
     const existingUser = await UserRepository.findByEmail(email);
     if (existingUser) {
@@ -43,23 +43,23 @@ class AdminService {
     // Return user without password
     const userWithoutPassword = newUser.toObject();
     delete userWithoutPassword.password;
-    
+
     return userWithoutPassword;
   }
 
-  async updateUserRole(userId, role) {
+  async updateUserRole (userId, role) {
     const user = await UserRepository.updateRole(userId, role);
     if (!user) throw new AppError('User not found', 404);
     return user;
   }
 
-  async deleteUser(userId) {
+  async deleteUser (userId) {
     const user = await UserRepository.delete(userId);
     if (!user) throw new AppError('User not found', 404);
     return user;
   }
 
-  async getAnalytics() {
+  async getAnalytics () {
     const totalUsers = await UserRepository.count();
     const totalScenarios = await ScenarioRepository.count();
     const totalFeedback = await FeedbackRepository.count();
@@ -71,7 +71,7 @@ class AdminService {
     return { totalUsers, totalScenarios, totalFeedback, totalProgress, roleStats, avgRating };
   }
 
-  async getAllFeedback() {
+  async getAllFeedback () {
     try {
       const feedback = await FeedbackRepository.findAll();
       return feedback;
@@ -80,7 +80,7 @@ class AdminService {
     }
   }
 
-  async deleteFeedback(feedbackId) {
+  async deleteFeedback (feedbackId) {
     try {
       const result = await FeedbackRepository.delete(feedbackId);
       return result;
@@ -89,17 +89,17 @@ class AdminService {
     }
   }
 
-  async cleanupBadges() {
+  async cleanupBadges () {
     const User = require('../models/User');
     return await badgeManager.cleanAllUsersBadges(User);
   }
 
-  async cleanupUserBadges(userId) {
+  async cleanupUserBadges (userId) {
     const User = require('../models/User');
     return await badgeManager.forceCleanUserBadges(User, userId);
   }
 
-  async removeUserBadges(userId, badgesToRemove) {
+  async removeUserBadges (userId, badgesToRemove) {
     const User = require('../models/User');
     return await badgeManager.removeSpecificBadges(User, userId, badgesToRemove);
   }

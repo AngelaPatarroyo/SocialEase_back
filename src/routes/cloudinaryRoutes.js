@@ -6,14 +6,14 @@ router.get('/signature', (req, res) => {
   try {
     const timestamp = Math.floor(Date.now() / 1000);
     const folder = 'avatars';
-    const upload_preset = 'signed_avatars';
+    const uploadPreset = 'signed_avatars';
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     const apiKey = process.env.CLOUDINARY_API_KEY;
 
     const paramsToSign = {
       folder,
       timestamp,
-      upload_preset,
+      uploadPreset
     };
 
     // Build the string to sign (sorted alphabetically by key)
@@ -32,7 +32,7 @@ router.get('/signature', (req, res) => {
     res.status(200).json({
       ...paramsToSign,
       signature,
-      api_key: apiKey,
+      api_key: apiKey
     });
   } catch (err) {
     res.status(500).json({ message: 'Signature generation failed' });

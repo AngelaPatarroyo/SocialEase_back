@@ -2,7 +2,6 @@ const FeedbackService = require('../services/feedbackService');
 const ScenarioRepository = require('../repositories/ScenarioRepository');
 const { resolveScenarioObjectId } = require('../utils/resolveScenarioId');
 const { addXP } = require('../utils/xpManager');
-const xpRewards = require('../config/xpRewards'); // optional fallback
 const AppError = require('../utils/errors');
 
 class FeedbackController {
@@ -11,7 +10,7 @@ class FeedbackController {
    * @route POST /api/feedback
    * @access Private
    */
-  async submit(req, res, next) {
+  async submit (req, res, next) {
     try {
       if (!req.user?.id) return next(new AppError('Unauthorized', 401));
 
@@ -33,24 +32,23 @@ class FeedbackController {
         userId,
         scenarioId: scenarioObjectId,
         reflection: String(reflection).trim(),
-        rating: numRating,
+        rating: numRating
       });
       if (!feedback) return next(new AppError('Failed to submit feedback', 500));
 
       // Calculate XP award
       const scenario = await ScenarioRepository.findById(scenarioObjectId);
-      const xpRewards = require('../config/xpRewards');
-      const award = scenario?.points || xpRewards?.scenarioCompletion || 0;
-      
+      const award = scenario?.points || 0;
+
       if (award > 0) {
         // Award XP to user
         const updatedUser = await addXP(userId, award);
-        
+
         res.status(200).json({
           success: true,
           message: 'Feedback submitted successfully',
           data: {
-            feedback: feedback,
+            feedback,
             xpEarned: award,
             totalXp: updatedUser.xp
           }
@@ -59,10 +57,9 @@ class FeedbackController {
         res.status(200).json({
           success: true,
           message: 'Feedback submitted successfully',
-          data: { feedback: feedback }
+          data: { feedback }
         });
       }
-
     } catch (err) {
       next(err);
     }
@@ -72,12 +69,11 @@ class FeedbackController {
    * @desc Get all feedback by user
    * @route GET /api/feedback/:userId
    */
-  async getUserFeedback(req, res, next) {
+  async getUserFeedback (req, res, next) {
     try {
       const { userId } = req.params;
       const feedbackList = await FeedbackService.getUserFeedback(userId);
-      if (!feedbackList || feedbackList.length === 0)
-        return next(new AppError('No feedback found for this user', 404));
+      if (!feedbackList || feedbackList.length === 0) { return next(new AppError('No feedback found for this user', 404)); }
       res.status(200).json({ success: true, data: feedbackList });
     } catch (err) {
       next(new AppError(err.message || 'Failed to fetch feedback', 500));

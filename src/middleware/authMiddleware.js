@@ -22,11 +22,11 @@ exports.authMiddleware = (req, res, next) => {
     }
 
     // attach user (normalize shape your controllers expect)
-    req.user = { 
+    req.user = {
       id: payload.id || payload.userId || payload.sub,
-      role: payload.role  // Extract role for admin middleware
+      role: payload.role // Extract role for admin middleware
     };
-    
+
     if (!req.user.id) {
       return next(new AppError('Token payload missing user id', 403));
     }

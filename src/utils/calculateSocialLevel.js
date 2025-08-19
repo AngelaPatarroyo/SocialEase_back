@@ -1,6 +1,4 @@
-
-module.exports = function calculateSocialLevel({ communicationConfidence, socialFrequency, anxietyTriggers }) {
-
+module.exports = function calculateSocialLevel ({ communicationConfidence, socialFrequency, anxietyTriggers }) {
   const conf = Number(communicationConfidence || 0);
   const freqScore = { rarely: 0, sometimes: 1, often: 2, daily: 3 }[socialFrequency] ?? 0;
   const anxietyPenalty = Array.isArray(anxietyTriggers) ? Math.min(anxietyTriggers.length, 3) : 0;

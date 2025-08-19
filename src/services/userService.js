@@ -5,7 +5,7 @@ class UserService {
   /**
    * Fetch user profile by ID
    */
-  async getProfile(userId) {
+  async getProfile (userId) {
     const user = await UserRepository.findById(userId);
     if (!user) throw new AppError('User not found', 404);
     return user;
@@ -14,7 +14,7 @@ class UserService {
   /**
    * Update user profile
    */
-  async updateProfile(userId, updates) {
+  async updateProfile (userId, updates) {
     const user = await UserRepository.findById(userId);
     if (!user) throw new AppError('User not found', 404);
 

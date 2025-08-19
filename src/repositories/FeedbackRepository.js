@@ -1,7 +1,7 @@
 // src/repositories/FeedbackRepository.js
 const Feedback = require('../models/Feedback');
 
-function findObjectIdField(model, tokenRegex, refNameHint = null) {
+function findObjectIdField (model, tokenRegex, refNameHint = null) {
   const paths = model.schema.paths;
   const keys = Object.keys(paths);
   for (const k of keys) {
@@ -17,7 +17,7 @@ function findObjectIdField(model, tokenRegex, refNameHint = null) {
 }
 
 module.exports = {
-  async create({ userId, scenarioId, reflection, rating }) {
+  async create ({ userId, scenarioId, reflection, rating }) {
     // figure out correct field names in the schema
     const scenarioField =
       findObjectIdField(Feedback, /scenario/i, 'Scenario') ||
@@ -38,13 +38,13 @@ module.exports = {
       [userField]: userId,
       [scenarioField]: scenarioId,
       reflection,
-      rating,
+      rating
     };
 
     return Feedback.create(doc);
   },
 
-  async countByUserId(userId) {
+  async countByUserId (userId) {
     // match whichever user field exists
     const userField =
       findObjectIdField(Feedback, /user/i, 'User') ||
@@ -53,7 +53,7 @@ module.exports = {
     return Feedback.countDocuments({ [userField]: userId });
   },
 
-  async findByUserId(userId) {
+  async findByUserId (userId) {
     const userField =
       findObjectIdField(Feedback, /user/i, 'User') ||
       findObjectIdField(Feedback, /user/i, null) ||
@@ -61,11 +61,11 @@ module.exports = {
     return Feedback.find({ [userField]: userId }).sort({ createdAt: -1 });
   },
 
-  async count() {
+  async count () {
     return Feedback.countDocuments();
   },
 
-  async getAverageRating() {
+  async getAverageRating () {
     const result = await Feedback.aggregate([
       { $match: { rating: { $exists: true, $ne: null } } },
       { $group: { _id: null, avgRating: { $avg: '$rating' } } }
@@ -73,25 +73,25 @@ module.exports = {
     return result.length > 0 ? Math.round(result[0].avgRating * 100) / 100 : 0;
   },
 
-  async findAll() {
+  async findAll () {
     try {
       const feedback = await Feedback.find()
         .populate('userId', 'name email')
         .populate('scenarioId', 'title category difficulty')
         .sort({ createdAt: -1 });
-      
+
       return feedback;
     } catch (error) {
       throw new Error(`Failed to fetch feedback: ${error.message}`);
     }
   },
 
-  async deleteById(id) {
+  async deleteById (id) {
     try {
       const result = await Feedback.findByIdAndDelete(id);
       return result;
     } catch (error) {
       throw new Error(`Failed to delete feedback: ${error.message}`);
     }
-  },
+  }
 };

@@ -20,7 +20,7 @@ exports.createGoal = async (req, res, next) => {
       title: title.trim(),
       target: Number.isFinite(Number(target)) ? Number(target) : 1,
       deadline: toISODate(deadline),
-      reminder: reminder ? new Date(reminder) : undefined,
+      reminder: reminder ? new Date(reminder) : undefined
     };
 
     const goals = await GoalService.createGoal(req.user.id, payload);

@@ -11,12 +11,12 @@ const router = express.Router();
 const updateProfileValidation = [
   body('name').optional().isString().trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters long'),
   body('avatar').optional().isString().withMessage('Avatar must be a string'),
-  body('theme').optional().isIn(['light', 'dark']).withMessage('Theme must be either light or dark'),
+  body('theme').optional().isIn(['light', 'dark']).withMessage('Theme must be either light or dark')
 ];
 
 const updatePasswordValidation = [
   body('currentPassword').optional().isString().withMessage('Current password must be a string'),
-  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long')
 ];
 
 // Profile

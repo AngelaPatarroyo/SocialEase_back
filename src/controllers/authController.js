@@ -5,7 +5,6 @@ const User = require('../models/User');
 const AppError = require('../utils/errors');
 const authService = require('../services/authService');
 
-
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -13,7 +12,7 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 const AuthController = {
-  async register(req, res, next) {
+  async register (req, res, next) {
     try {
       const { name, email, password } = req.body;
       if (!name || !email || !password) {
@@ -21,7 +20,7 @@ const AuthController = {
       }
 
       // Use authService instead of duplicating logic
-      const user = await authService.register({ name, email, password });
+      await authService.register({ name, email, password });
 
       return res.status(201).json({ message: 'Registration successful' });
     } catch (err) {
@@ -32,7 +31,7 @@ const AuthController = {
     }
   },
 
-  async login(req, res, next) {
+  async login (req, res, next) {
     try {
       const { email, password } = req.body;
 
@@ -70,14 +69,14 @@ const AuthController = {
     }
   },
 
-  async logout(req, res) {
+  async logout (req, res) {
     return res.status(200).json({ message: 'Logged out successfully' });
   },
 
-  async googleOAuth(req, res) {
+  async googleOAuth (req, res) {
     try {
       const { mode } = req.query;
-      
+
       if (!mode || !['login', 'register'].includes(mode)) {
         return res.status(400).json({ message: 'Invalid mode. Use ?mode=login or ?mode=register' });
       }
@@ -86,7 +85,7 @@ const AuthController = {
         access_type: 'offline',
         prompt: 'consent',
         scope: ['profile', 'email'],
-        state: mode,
+        state: mode
       });
 
       return res.redirect(url);
@@ -95,10 +94,10 @@ const AuthController = {
     }
   },
 
-  async googleCallback(req, res, next) {
+  async googleCallback (req, res, next) {
     try {
       const { code, state: mode } = req.query;
-      
+
       if (!code) throw new AppError('Authorization code is missing', 400);
       if (!mode || !['login', 'register'].includes(mode)) {
         throw new AppError('Invalid OAuth mode', 400);
@@ -132,7 +131,7 @@ const AuthController = {
           streak: 0,
           badges: [],
           goals: [],
-          provider: 'google',
+          provider: 'google'
         });
       } else if (mode === 'login') {
         if (!user) {
@@ -150,7 +149,7 @@ const AuthController = {
     } catch (error) {
       return next(error);
     }
-  },
+  }
 };
 
 module.exports = AuthController;

@@ -4,7 +4,7 @@ class ScenarioController {
   /** ------------------------
    *   GET ALL SCENARIOS
    * ------------------------ */
-  async getScenarios(req, res, next) {
+  async getScenarios (req, res, next) {
     try {
       const scenarios = await ScenarioService.getAllScenarios();
       res.status(200).json({ success: true, data: scenarios });
@@ -16,7 +16,7 @@ class ScenarioController {
   /** ------------------------
    *   GET SCENARIO BY ID
    * ------------------------ */
-  async getScenarioById(req, res, next) {
+  async getScenarioById (req, res, next) {
     try {
       const scenario = await ScenarioService.getScenarioById(req.params.id);
       res.status(200).json({ success: true, data: scenario });
@@ -28,7 +28,7 @@ class ScenarioController {
   /** ------------------------
    *   CREATE SCENARIO
    * ------------------------ */
-  async createScenario(req, res, next) {
+  async createScenario (req, res, next) {
     try {
       const scenario = await ScenarioService.createScenario(req.body);
       res.status(201).json({
@@ -44,7 +44,7 @@ class ScenarioController {
   /** ------------------------
    *   UPDATE SCENARIO
    * ------------------------ */
-  async updateScenario(req, res, next) {
+  async updateScenario (req, res, next) {
     try {
       const scenario = await ScenarioService.updateScenario(req.params.id, req.body);
       res.status(200).json({
@@ -60,7 +60,7 @@ class ScenarioController {
   /** ------------------------
    *   DELETE SCENARIO
    * ------------------------ */
-  async deleteScenario(req, res, next) {
+  async deleteScenario (req, res, next) {
     try {
       await ScenarioService.deleteScenario(req.params.id);
       res.status(200).json({ success: true, message: 'Scenario deleted successfully' });
@@ -72,7 +72,7 @@ class ScenarioController {
   /** ------------------------
    *   COMPLETE SCENARIO
    * ------------------------ */
-  async completeScenario(req, res, next) {
+  async completeScenario (req, res, next) {
     try {
       const message = await ScenarioService.completeScenario(req.user.id, req.params.scenarioId);
       res.status(200).json({ success: true, message });
@@ -84,7 +84,7 @@ class ScenarioController {
   /** ------------------------
    *   ADAPTIVE DIFFICULTY (FR4)
    * ------------------------ */
-  async getAdaptiveScenario(req, res, next) {
+  async getAdaptiveScenario (req, res, next) {
     try {
       const scenario = await ScenarioService.getAdaptiveScenario(req.user.id);
       res.status(200).json({
@@ -100,7 +100,7 @@ class ScenarioController {
   /** ------------------------
    *   REPLAY SCENARIO (DR2)
    * ------------------------ */
-  async replayScenario(req, res, next) {
+  async replayScenario (req, res, next) {
     try {
       const message = await ScenarioService.replayScenario(req.user.id, req.params.scenarioId);
       res.status(200).json({ success: true, message });
@@ -112,7 +112,7 @@ class ScenarioController {
   /** ------------------------
    *   SKIP SCENARIO (DR2)
    * ------------------------ */
-  async skipScenario(req, res, next) {
+  async skipScenario (req, res, next) {
     try {
       const { currentId, difficulty } = req.query;
       const scenario = await ScenarioService.skipScenario(currentId, difficulty);
@@ -129,7 +129,7 @@ class ScenarioController {
   /** ------------------------
    *   GET VR SCENARIOS (Luxury Feature)
    * ------------------------ */
-  async getVRScenarios(req, res, next) {
+  async getVRScenarios (req, res, next) {
     try {
       const scenarios = await ScenarioService.getVRScenarios();
       res.status(200).json({
@@ -146,7 +146,7 @@ class ScenarioController {
    *   SAVE SCENARIO PREPARATION DATA (NEW)
    * ------------------------ */
   // ScenarioController.savePreparation
-  async savePreparation(req, res, next) {
+  async savePreparation (req, res, next) {
     try {
       const {
         scenarioId,
@@ -168,7 +168,7 @@ class ScenarioController {
         goal: goal ?? intention ?? '',
         fear: fear ?? '',
         support: support ?? '',
-        visualization: visualization ?? '',
+        visualization: visualization ?? ''
       };
 
       const saved = await ScenarioService.savePreparationData(data);

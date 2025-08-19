@@ -2,50 +2,50 @@ const mongoose = require('mongoose');
 const Scenario = require('../models/Scenario');
 
 class ScenarioRepository {
-  async create(data) {
+  async create (data) {
     return Scenario.create(data);
   }
 
-  async findAll() {
+  async findAll () {
     return Scenario.find().sort({ createdAt: -1 });
   }
 
-  async findById(id) {
+  async findById (id) {
     return Scenario.findById(id);
   }
 
-  async findByIds(ids) {
+  async findByIds (ids) {
     return Scenario.find({ _id: { $in: ids } });
   }
 
-  async update(id, data) {
+  async update (id, data) {
     return Scenario.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   }
 
-  async delete(id) {
+  async delete (id) {
     return Scenario.findByIdAndDelete(id);
   }
 
-  async count() {
+  async count () {
     return Scenario.countDocuments();
   }
 
-  async findByDifficulty(difficulty) {
+  async findByDifficulty (difficulty) {
     return Scenario.find({ difficulty });
   }
 
   // Fetch all VR-supported scenarios
-  async findVRScenarios() {
+  async findVRScenarios () {
     return Scenario.find({ vrSupported: true });
   }
 
   // NEW: find by slug
-  async findBySlug(slug) {
+  async findBySlug (slug) {
     return Scenario.findOne({ slug });
   }
 
   // Optional helper: find by Mongo _id or slug transparently
-  async findBySlugOrId(identifier) {
+  async findBySlugOrId (identifier) {
     if (mongoose.Types.ObjectId.isValid(identifier)) {
       return this.findById(identifier);
     }
@@ -53,7 +53,7 @@ class ScenarioRepository {
   }
 
   // Optional: quick existence check by slug
-  async existsBySlug(slug) {
+  async existsBySlug (slug) {
     return Scenario.exists({ slug });
   }
 }

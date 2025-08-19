@@ -8,7 +8,7 @@
  * @param {number|null} capLevel  If set (e.g., 50), levels above cap become unreachable.
  * @returns {(level:number)=>number} cumulative XP to reach `level`
  */
-function buildLinear(base = 100, capLevel = null) {
+function buildLinear (base = 100, capLevel = null) {
   const b = Number(base) || 100;
   const capped = Number.isFinite(capLevel) && capLevel > 0 ? Math.floor(capLevel) : null;
 
@@ -31,7 +31,7 @@ function buildLinear(base = 100, capLevel = null) {
  * @param {number[]} thresholds  e.g., [null, 0, 100, 300, 700, 1500]
  * @returns {(level:number)=>number}
  */
-function buildFromArray(thresholds) {
+function buildFromArray (thresholds) {
   if (!Array.isArray(thresholds)) {
     throw new Error('buildFromArray: thresholds must be an array');
   }
@@ -61,7 +61,7 @@ function buildFromArray(thresholds) {
  * @param {number} xp
  * @param {(level:number)=>number} thresholdFn
  */
-function levelFromXP(xp = 0, thresholdFn = buildLinear(100)) {
+function levelFromXP (xp = 0, thresholdFn = buildLinear(100)) {
   xp = Math.max(0, Number(xp) || 0);
 
   let level = 1;
@@ -89,10 +89,10 @@ function levelFromXP(xp = 0, thresholdFn = buildLinear(100)) {
  *   percent: number           // 0..1
  * }}
  */
-function levelMeta(xp = 0, thresholdFn = buildLinear(100)) {
+function levelMeta (xp = 0, thresholdFn = buildLinear(100)) {
   const level = levelFromXP(xp, thresholdFn);
-  const prevTotal = thresholdFn(level);       // total XP to reach current level
-  const nextTotal = thresholdFn(level + 1);   // total XP to reach next level
+  const prevTotal = thresholdFn(level); // total XP to reach current level
+  const nextTotal = thresholdFn(level + 1); // total XP to reach next level
 
   const xpIntoLevel = Math.max(0, (Number(xp) || 0) - prevTotal);
   const xpForNextLevel = Number.isFinite(nextTotal) ? (nextTotal - prevTotal) : Number.POSITIVE_INFINITY;
@@ -113,5 +113,5 @@ module.exports = {
   buildFromArray,
   levelFromXP,
   levelMeta,
-  linear100,
+  linear100
 };

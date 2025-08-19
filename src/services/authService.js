@@ -7,7 +7,7 @@ class AuthService {
   /**
    * Register a new user
    */
-  async register({ name, email, password }) {
+  async register ({ name, email, password }) {
     // Check if user already exists
     const existingUser = await UserRepository.findByEmail(email);
     if (existingUser) throw new AppError('Email already in use', 400);
@@ -44,7 +44,7 @@ class AuthService {
   /**
    * Login and return token + user data
    */
-  async login({ email, password }) {
+  async login ({ email, password }) {
     // Find user by email with password
     const user = await UserRepository.findByEmailWithPassword(email);
     if (!user) throw new AppError('Invalid credentials', 401);

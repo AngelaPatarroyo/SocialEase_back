@@ -4,7 +4,7 @@ const AppError = require('../utils/errors');
 
 const SelfAssessmentController = {
   // POST /api/self-assessment
-  async create(req, res, next) {
+  async create (req, res, next) {
     try {
       const userId = req.user?.id;
       if (!userId) return next(new AppError('User ID missing from request. Check token decoding.', 401));
@@ -22,7 +22,7 @@ const SelfAssessmentController = {
           success: true,
           message: result.message,
           data: result.data,
-          meta: result.meta,
+          meta: result.meta
         });
       }
 
@@ -37,7 +37,7 @@ const SelfAssessmentController = {
         success: true,
         message: result.message,
         data: result.data,
-        meta: result.meta,
+        meta: result.meta
       });
     } catch (error) {
       next(error);
@@ -45,7 +45,7 @@ const SelfAssessmentController = {
   },
 
   // PUT /api/self-assessment
-  async update(req, res, next) {
+  async update (req, res, next) {
     try {
       const userId = req.user?.id;
       if (!userId) return next(new AppError('User ID missing from token', 401));
@@ -65,7 +65,7 @@ const SelfAssessmentController = {
         success: true,
         message: result.message,
         data: result.data,
-        meta: result.meta,
+        meta: result.meta
       });
     } catch (error) {
       next(error);
@@ -73,16 +73,16 @@ const SelfAssessmentController = {
   },
 
   // GET /api/self-assessment/:userId (admin)
-  async getUserAssessment(req, res, next) {
+  async getUserAssessment (req, res, next) {
     try {
       const { userId } = req.params;
-      
+
       const assessment = await SelfAssessmentService.getAssessment(userId);
-      
+
       if (!assessment || assessment.length === 0) {
         return next(new AppError('No self-assessments found for this user', 404));
       }
-      
+
       return res.status(200).json({ success: true, data: assessment });
     } catch (error) {
       next(error);
@@ -90,14 +90,14 @@ const SelfAssessmentController = {
   },
 
   // GET /api/self-assessment (current user)
-  async getCurrentUserAssessment(req, res, next) {
+  async getCurrentUserAssessment (req, res, next) {
     try {
       const userId = req.user?.id;
       if (!userId) return next(new AppError('User ID missing from token', 401));
       const assessment = await SelfAssessmentService.getAssessment(userId);
       return res.status(200).json({
         success: true,
-        data: Array.isArray(assessment) ? assessment : (assessment ? [assessment] : []),
+        data: Array.isArray(assessment) ? assessment : (assessment ? [assessment] : [])
       });
     } catch (error) {
       next(error);
