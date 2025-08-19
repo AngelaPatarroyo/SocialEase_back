@@ -1,19 +1,19 @@
-# 🚀 SocialEase Backend
+# SocialEase Backend
 
 A robust Node.js backend API for SocialEase, a social skills development platform that helps users improve through interactive scenarios, self-assessments, and gamified learning experiences.
 
-## ✨ Features
+## Features
 
-- **🔐 User Authentication & Management** - JWT-based auth with Google OAuth support
-- **🎭 Scenario System** - Interactive social scenarios with adaptive difficulty
-- **🏆 Gamification Engine** - XP, levels, badges, and streaks to motivate progress
-- **📊 Self-Assessment Module** - Regular progress evaluation and reflection
-- **📈 Progress Tracking** - Comprehensive user progress and analytics
-- **👑 Admin Dashboard** - User management and system monitoring
-- **💬 Real-time Feedback** - Immediate response and guidance
-- **🎯 Goal Setting** - Personal development objectives and tracking
+- **User Authentication & Management** - JWT-based auth with Google OAuth support
+- **Scenario System** - Interactive social scenarios with adaptive difficulty
+- **Gamification Engine** - XP, levels, badges, and streaks to motivate progress
+- **Self-Assessment Module** - Regular progress evaluation and reflection
+- **Progress Tracking** - Comprehensive user progress and analytics
+- **Admin Dashboard** - User management and system monitoring
+- **Real-time Feedback** - Immediate response and guidance
+- **Goal Setting** - Personal development objectives and tracking
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Runtime**: Node.js 18+ with Express.js
 - **Database**: MongoDB with Mongoose ODM
@@ -28,7 +28,7 @@ A robust Node.js backend API for SocialEase, a social skills development platfor
 - **Containerization**: Docker support for development and production
 - **Code Quality**: ESLint, Husky pre-commit hooks
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 src/
@@ -43,7 +43,7 @@ src/
 └── validators/      # Input validation schemas
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -77,7 +77,7 @@ src/
 
 The API will be available at `http://localhost:4000`
 
-## 🔧 Environment Variables
+## Environment Variables
 
 Create a `.env` file in the root directory:
 
@@ -106,7 +106,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 FRONTEND_URL=http://localhost:3000
 ```
 
-## 📚 API Documentation
+## API Documentation
 
 Interactive API documentation is available at `/api/docs` when the server is running.
 
@@ -140,11 +140,11 @@ Most endpoints require JWT authentication. Include the token in the Authorizatio
 Authorization: Bearer <your-jwt-token>
 ```
 
-## 🏆 Badge System
+## Badge System
 
 SocialEase features a comprehensive achievement system that rewards users for progress, consistency, and achievements:
 
-### 🎖️ XP Milestone Badges
+### XP Milestone Badges
 - **First Steps** - Reach 100 XP
 - **Momentum Builder** - Reach 200 XP
 - **Consistent Learner** - Reach 300 XP
@@ -156,28 +156,28 @@ SocialEase features a comprehensive achievement system that rewards users for pr
 - **Almost Legendary** - Reach 900 XP
 - **XP Master** - Reach 1000 XP
 
-### 🌟 Special XP Badges
+### Special XP Badges
 - **XP Legend** - Reach 5,000 total XP
 - **XP God** - Reach 10,000 total XP
 
-### 🔥 Streak Badges
+### Streak Badges
 - **Streak Master** - Maintain 5-day streak
 - **Streak Champion** - Maintain 10-day streak
 - **Streak Legend** - Maintain 30-day streak
 
-### 📝 Self-Assessment Badges
+### Self-Assessment Badges
 - **Self Reflection Master** - Complete your first self-assessment
 
 Badges are automatically awarded and displayed in user profiles, dashboards, and progress tracking.
 
-## 🚀 CI/CD Pipeline
+## CI/CD Pipeline
 
 ### Automated Workflow
-- **✅ Testing** - Jest tests with MongoDB Memory Server
-- **✅ Linting** - ESLint code quality checks
-- **✅ Security** - npm audit and Snyk vulnerability scanning
-- **✅ Building** - Production build verification
-- **✅ Deployment** - Automatic deployment to Railway/Heroku
+- **Testing** - Jest tests with MongoDB Memory Server
+- **Linting** - ESLint code quality checks
+- **Security** - npm audit and Snyk vulnerability scanning
+- **Building** - Production build verification
+- **Deployment** - Automatic deployment to Railway/Heroku
 
 ### Pipeline Triggers
 - **On Push to Main** - Full CI/CD pipeline execution
@@ -189,7 +189,7 @@ Badges are automatically awarded and displayed in user profiles, dashboards, and
 - **Heroku** - Alternative deployment platform
 - **Docker** - Containerized deployment
 
-## 🧪 Testing
+## Testing
 
 ```bash
 npm test                    # Run all tests
@@ -204,7 +204,7 @@ npm run test:debug         # Run tests with debugging
 - **Database Tests** - MongoDB operations testing
 - **Authentication Tests** - JWT and OAuth testing
 
-## 🐳 Docker Support
+## Docker Support
 
 ### Development
 ```bash
@@ -226,7 +226,7 @@ npm run docker:run-prod
 docker run -p 4000:4000 socialease-backend
 ```
 
-## 🔒 Security Features
+## Security Features
 
 - **JWT Authentication** - Secure token-based authentication
 - **Role-based Access Control** - Admin and user role separation
@@ -237,7 +237,7 @@ docker run -p 4000:4000 socialease-backend
 - **Input Sanitization** - XSS and injection protection
 - **Security Scanning** - Automated vulnerability detection
 
-## 🛠️ Development
+## Development
 
 ### Available Scripts
 
@@ -259,7 +259,7 @@ npm run prepare        # Setup Git hooks
 - **Husky** - Git hooks for quality checks
 - **Pre-commit** - Automatic linting before commits
 
-## 🚀 Deployment
+## Deployment
 
 ### Production Build
 
@@ -281,14 +281,14 @@ npm start
 
 The application includes a health check endpoint at `/health` for monitoring and load balancer health checks.
 
-## 📊 Monitoring & Logging
+## Monitoring & Logging
 
 - **Winston Logging** - Structured logging with multiple transports
 - **Morgan HTTP Logging** - Request/response logging
 - **Health Endpoints** - System health monitoring
 - **Error Tracking** - Comprehensive error handling and logging
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -304,11 +304,11 @@ The application includes a health check endpoint at `/health` for monitoring and
 - Update documentation as needed
 - Ensure CI/CD pipeline passes
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details
 
-## 🆘 Support
+## Support
 
 For questions or issues:
 - Check the API documentation at `/api/docs`
@@ -316,7 +316,7 @@ For questions or issues:
 - Create a new issue with detailed information
 - Check the [CI/CD Guide](CI-CD_README.md) for deployment help
 
-## 🎯 Roadmap
+## Roadmap
 
 - [ ] Enhanced analytics dashboard
 - [ ] Real-time notifications
@@ -326,7 +326,7 @@ For questions or issues:
 
 ---
 
-**SocialEase Backend** - Empowering social skills development through technology 🚀
+**SocialEase Backend** - Empowering social skills development through technology
 
-*Built with ❤️ using Node.js, Express, MongoDB, and modern development practices*
+*Built with Node.js, Express, MongoDB, and modern development practices*
 
