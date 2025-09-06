@@ -105,4 +105,4 @@ const SelfAssessmentController = {
   }
 };
 
-module.exports = new SelfAssessmentController();
+module.exports = SelfAssessmentController;

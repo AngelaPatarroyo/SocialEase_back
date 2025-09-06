@@ -4,6 +4,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const https = require('https');
+const fs = require('fs');
 const logger = require('./src/utils/logger');
 require('dotenv').config();
 
@@ -11,7 +13,7 @@ const app = express();
 
 app.use(helmet());
 
-const allowedOrigins = ['http://localhost:3000', process.env.FRONTEND_URL];
+const allowedOrigins = ['http://localhost:3000', 'https://localhost:3000', process.env.FRONTEND_URL];
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -172,10 +174,28 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 const PORT = process.env.PORT || 4000;
+const HTTPS_PORT = process.env.HTTPS_PORT || 4001;
 
 // Only start the server if this file is run directly
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  // Start HTTP server
+  app.listen(PORT, () => console.log(`🚀 HTTP Server running on port ${PORT}`));
+  
+  // Start HTTPS server
+  try {
+    const httpsOptions = {
+      key: fs.readFileSync('./ssl/key.pem'),
+      cert: fs.readFileSync('./ssl/cert.pem')
+    };
+    
+    https.createServer(httpsOptions, app).listen(HTTPS_PORT, () => {
+      console.log(`🔒 HTTPS Server running on port ${HTTPS_PORT}`);
+      console.log(`🌐 Access your app at: https://localhost:${HTTPS_PORT}`);
+    });
+  } catch (error) {
+    console.log('⚠️  HTTPS server not started. SSL certificates not found.');
+    console.log('   Run: openssl req -x509 -newkey rsa:4096 -keyout ssl/key.pem -out ssl/cert.pem -days 365 -nodes');
+  }
 }
 
 // Export the app for testing
