@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const UserRepository = require('../repositories/UserRepository');
 const AppError = require('../utils/errors'); // Use your error utility for consistency

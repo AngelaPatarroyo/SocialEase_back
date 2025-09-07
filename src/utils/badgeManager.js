@@ -98,6 +98,16 @@ class BadgeManager {
     return newBadges;
   }
 
+  // Legacy method for backward compatibility - fetches user and calls checkAchievements
+  async checkForNewBadges (userId) {
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return await this.checkAchievements(user);
+  }
+
   // Get all available badges with their requirements
   getAllBadges () {
     return {

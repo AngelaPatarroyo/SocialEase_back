@@ -1,6 +1,6 @@
 const { google } = require('googleapis');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const AppError = require('../utils/errors');
 const authService = require('../services/authService');

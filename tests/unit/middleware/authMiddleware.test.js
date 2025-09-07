@@ -49,7 +49,7 @@ describe('AuthMiddleware Unit Tests', () => {
       expect(mockReq.user.role).toBe(role);
     });
 
-    it('should handle token with 'sub' claim', () => {
+    it('should handle token with \'sub\' claim', () => {
       const userId = '507f1f77bcf86cd799439011';
       const role = 'user';
       

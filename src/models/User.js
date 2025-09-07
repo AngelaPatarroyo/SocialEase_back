@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Add database indexes for better query performance
-userSchema.index({ email: 1 }); // Already unique, but explicit index
+// Note: email index is automatically created by unique: true
 userSchema.index({ provider: 1 }); // For filtering by auth provider
 userSchema.index({ role: 1 }); // For admin queries
 userSchema.index({ xp: -1 }); // For leaderboards (descending)

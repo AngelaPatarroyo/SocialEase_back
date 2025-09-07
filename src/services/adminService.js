@@ -20,7 +20,6 @@ class AdminService {
     }
 
     // Hash password
-    const bcrypt = require('bcrypt');
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user with admin-provided data

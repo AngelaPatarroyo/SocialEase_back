@@ -10,7 +10,7 @@ const scenarioSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Add database indexes for better query performance
-scenarioSchema.index({ slug: 1 }); // Already unique, but explicit index
+// Note: slug index is automatically created by unique: true
 scenarioSchema.index({ difficulty: 1 }); // For filtering by difficulty
 scenarioSchema.index({ points: -1 }); // For sorting by points (descending)
 scenarioSchema.index({ vrSupported: 1 }); // For VR filter queries

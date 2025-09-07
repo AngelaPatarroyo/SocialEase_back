@@ -1,41 +1,42 @@
 const Scenario = require('../models/Scenario');
 const Progress = require('../models/Progress');
 const ScenarioPreparation = require('../models/ScenarioPreparation');
+const ScenarioRepository = require('../repositories/ScenarioRepository');
 
 class ScenarioService {
   /** ------------------------
    *   GET ALL SCENARIOS
    * ------------------------ */
   async getAllScenarios () {
-    return Scenario.find().sort({ createdAt: -1 });
+    return ScenarioRepository.findAll();
   }
 
   /** ------------------------
    *   GET SCENARIO BY ID
    * ------------------------ */
   async getScenarioById (id) {
-    return Scenario.findById(id);
+    return ScenarioRepository.findById(id);
   }
 
   /** ------------------------
    *   CREATE SCENARIO
    * ------------------------ */
   async createScenario (data) {
-    return Scenario.create(data);
+    return ScenarioRepository.create(data);
   }
 
   /** ------------------------
    *   UPDATE SCENARIO
    * ------------------------ */
   async updateScenario (id, data) {
-    return Scenario.findByIdAndUpdate(id, data, { new: true });
+    return ScenarioRepository.update(id, data);
   }
 
   /** ------------------------
    *   DELETE SCENARIO
    * ------------------------ */
   async deleteScenario (id) {
-    return Scenario.findByIdAndDelete(id);
+    return ScenarioRepository.delete(id);
   }
 
   /** ------------------------
@@ -82,7 +83,7 @@ class ScenarioService {
    *   GET VR SCENARIOS
    * ------------------------ */
   async getVRScenarios () {
-    return Scenario.find({ vrSupported: true });
+    return ScenarioRepository.findVRScenarios();
   }
 
   /** ------------------------
